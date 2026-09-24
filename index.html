@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NT Information Center</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📦</text></svg>" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">📦</span>
+        <div>
+          <h1 id="site-name">NT Information Center</h1>
+          <p id="site-tagline" class="tagline"></p>
+        </div>
+      </div>
+      <button type="button" class="btn btn-ghost" id="add-btn">+ Add resource</button>
+    </div>
+
+    <div class="wrap search-bar">
+      <label class="search">
+        <span class="sr-only">Search resources</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="search" type="search" placeholder="Search SOPs, forms, systems… (press / to focus)" autocomplete="off" />
+      </label>
+      <label class="role-select">
+        <span>My role</span>
+        <select id="role"><option value="">Everyone</option></select>
+      </label>
+    </div>
+    <div class="wrap">
+      <div id="type-filters" class="chips" role="group" aria-label="Filter by type"></div>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <nav class="sidebar" aria-label="Sections">
+      <ul id="category-nav"></ul>
+    </nav>
+
+    <div class="content">
+      <section id="starter" class="panel starter" hidden>
+        <div class="panel-head">
+          <div>
+            <h2>🚀 New Starter Checklist</h2>
+            <p class="muted">Work through these in your first week. Your progress is saved on this computer.</p>
+          </div>
+          <div class="progress" aria-live="polite">
+            <div class="progress-bar"><span id="starter-bar"></span></div>
+            <span id="starter-count"></span>
+          </div>
+        </div>
+        <ol id="starter-list" class="checklist"></ol>
+      </section>
+
+      <section id="quick" class="panel" hidden>
+        <h2>⭐ Quick Links</h2>
+        <div id="quick-list" class="quick-grid"></div>
+      </section>
+
+      <section id="favourites" class="panel" hidden>
+        <h2>❤️ My Favourites</h2>
+        <div id="fav-list" class="card-grid"></div>
+      </section>
+
+      <div id="results-summary" class="results-summary" aria-live="polite"></div>
+      <div id="sections"></div>
+
+      <section id="contacts" class="panel" hidden>
+        <h2>📞 Who to Ask</h2>
+        <div id="contact-list" class="contact-grid"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Something missing or out of date? Tell your supervisor, or click <strong>+ Add resource</strong> to prepare a new entry.</p>
+  </footer>
+
+  <!-- Add-resource helper -->
+  <dialog id="add-dialog">
+    <form id="add-form" method="dialog">
+      <h2>Add a resource</h2>
+      <p class="muted small">Fill this in and we'll build the entry for you. Paste it into <code>data/resources.js</code> inside the <code>resources: [ … ]</code> list. For files, copy the file into the <code>files/</code> folder first.</p>
+
+      <label>Title *<input name="title" required /></label>
+      <label>Link or file path *
+        <input name="url" required placeholder="files/sops/My-SOP.pdf  or  https://…" />
+      </label>
+      <div class="row">
+        <label>Type
+          <select name="type"><option value="">Auto (from file extension)</option></select>
+        </label>
+        <label>Section *
+          <select name="category" required></select>
+        </label>
+      </div>
+      <label>Description<textarea name="description" rows="2"></textarea></label>
+      <label>Roles (leave blank for everyone)
+        <select name="roles" multiple size="4"></select>
+      </label>
+      <div class="row">
+        <label>Search tags (comma separated)<input name="tags" placeholder="forklift, MHE" /></label>
+        <label>Owner / contact<input name="owner" /></label>
+      </div>
+      <div class="row checks">
+        <label class="inline"><input type="checkbox" name="newStarter" /> On new starter checklist</label>
+        <label class="inline"><input type="checkbox" name="pinned" /> Show in Quick Links</label>
+      </div>
+
+      <label>Entry to paste
+        <textarea id="snippet" rows="8" readonly></textarea>
+      </label>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn" id="copy-btn">Copy entry</button>
+        <button type="submit" class="btn btn-ghost" value="close">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="data/resources.js"></script>
+  <script src="assets/app.js"></script>
+</body>
+</html>
