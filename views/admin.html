@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Admin · Information Center</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
+</head>
+<body>
+  <header class="site-header admin-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">🛠️</span>
+        <div>
+          <h1><span id="site-name">Information Center</span> · Admin</h1>
+          <p class="tagline">Changes go live on the public site straight away.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">View site ↗</a>
+        <form method="post" action="/admin/logout"><button class="btn btn-ghost" type="submit">Sign out</button></form>
+      </div>
+    </div>
+    <nav class="wrap tabs" role="tablist">
+      <button type="button" role="tab" class="tab active" data-tab="resources" aria-selected="true">📄 Resources</button>
+      <button type="button" role="tab" class="tab" data-tab="sections" aria-selected="false">🗂️ Sections &amp; Roles</button>
+      <button type="button" role="tab" class="tab" data-tab="contacts" aria-selected="false">📞 Contacts &amp; Site</button>
+    </nav>
+  </header>
+
+  <main class="wrap admin-main">
+    <!-- RESOURCES -->
+    <section id="tab-resources" class="tab-panel">
+      <div class="toolbar">
+        <button type="button" class="btn" id="new-resource">+ Add resource</button>
+        <input type="search" id="admin-search" placeholder="Filter resources…" />
+        <select id="admin-section"><option value="">All sections</option></select>
+      </div>
+      <div id="resource-list"></div>
+    </section>
+
+    <!-- SECTIONS & ROLES -->
+    <section id="tab-sections" class="tab-panel" hidden>
+      <div class="panel">
+        <h2>Sections</h2>
+        <p class="muted">The headings resources are grouped under on the public site. Use the arrows to change the order.</p>
+        <div id="section-rows" class="edit-rows"></div>
+        <button type="button" class="btn btn-ghost" id="add-section">+ Add section</button>
+      </div>
+      <div class="panel">
+        <h2>Roles</h2>
+        <p class="muted">One per line. These appear in the "My role" filter and can be ticked on each resource.</p>
+        <textarea id="roles" rows="8"></textarea>
+      </div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save sections &amp; roles</button></div>
+    </section>
+
+    <!-- CONTACTS & SITE -->
+    <section id="tab-contacts" class="tab-panel" hidden>
+      <div class="panel">
+        <h2>Site details</h2>
+        <label>Site name<input id="siteName" /></label>
+        <label>Tagline<input id="tagline" /></label>
+      </div>
+      <div class="panel">
+        <h2>Who to Ask</h2>
+        <p class="muted">Key contacts shown at the bottom of the public page.</p>
+        <div id="contact-rows" class="edit-rows"></div>
+        <button type="button" class="btn btn-ghost" id="add-contact">+ Add contact</button>
+      </div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save contacts &amp; site details</button></div>
+    </section>
+  </main>
+
+  <!-- Add / edit resource -->
+  <dialog id="resource-dialog">
+    <form id="resource-form">
+      <h2 id="dialog-title">Add resource</h2>
+      <p id="form-error" class="alert" hidden></p>
+
+      <label>Title *<input name="title" required maxlength="200" /></label>
+
+      <fieldset class="source">
+        <legend>What are you adding?</legend>
+        <label class="inline"><input type="radio" name="source" value="file" checked /> 📎 Upload a file <span class="muted small">(PDF, Word, Excel, macro, PowerPoint…)</span></label>
+        <label class="inline"><input type="radio" name="source" value="link" /> 🌐 Link to a website or online document</label>
+      </fieldset>
+
+      <div id="file-field">
+        <p id="current-file" class="current-file" hidden></p>
+        <label><span id="file-label">File *</span><input type="file" name="file" /></label>
+      </div>
+      <label id="url-field" hidden>Web address *
+        <input name="url" placeholder="https://…" />
+      </label>
+
+      <div class="row">
+        <label>Section *<select name="category" required></select></label>
+        <label>Type
+          <select name="type"><option value="">Auto-detect</option></select>
+        </label>
+      </div>
+      <label>Description<textarea name="description" rows="2" maxlength="1000" placeholder="What is it and when would someone use it?"></textarea></label>
+
+      <fieldset>
+        <legend>Relevant roles <span class="muted small">(none ticked = everyone)</span></legend>
+        <div id="role-checks" class="checks-grid"></div>
+      </fieldset>
+
+      <div class="row">
+        <label>Search tags<input name="tags" placeholder="Comma separated, e.g. forklift, MHE" /></label>
+        <label>Owner / contact<input name="owner" maxlength="120" /></label>
+      </div>
+      <div class="row">
+        <label>Last reviewed<input type="date" name="updated" /></label>
+        <div class="flag-checks">
+          <label class="inline"><input type="checkbox" name="newStarter" /> 🚀 On the New Starter checklist</label>
+          <label class="inline"><input type="checkbox" name="pinned" /> ⭐ Show in Quick Links</label>
+        </div>
+      </div>
+
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-resource">Cancel</button>
+        <button type="submit" class="btn" id="save-resource">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="/assets/admin.js"></script>
+</body>
+</html>

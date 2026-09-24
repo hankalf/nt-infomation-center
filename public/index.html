@@ -17,7 +17,7 @@
           <p id="site-tagline" class="tagline"></p>
         </div>
       </div>
-      <button type="button" class="btn btn-ghost" id="add-btn">+ Add resource</button>
+      <a class="btn btn-ghost" href="/admin">Admin</a>
     </div>
 
     <div class="wrap search-bar">
@@ -67,7 +67,7 @@
       </section>
 
       <div id="results-summary" class="results-summary" aria-live="polite"></div>
-      <div id="sections"></div>
+      <div id="sections"><p class="muted">Loading…</p></div>
 
       <section id="contacts" class="panel" hidden>
         <h2>📞 Who to Ask</h2>
@@ -77,52 +77,9 @@
   </main>
 
   <footer class="site-footer wrap">
-    <p>Something missing or out of date? Tell your supervisor, or click <strong>+ Add resource</strong> to prepare a new entry.</p>
+    <p>Something missing or out of date? Let your supervisor or an admin know.</p>
   </footer>
 
-  <!-- Add-resource helper -->
-  <dialog id="add-dialog">
-    <form id="add-form" method="dialog">
-      <h2>Add a resource</h2>
-      <p class="muted small">Fill this in and we'll build the entry for you. Paste it into <code>data/resources.js</code> inside the <code>resources: [ … ]</code> list. For files, copy the file into the <code>files/</code> folder first.</p>
-
-      <label>Title *<input name="title" required /></label>
-      <label>Link or file path *
-        <input name="url" required placeholder="files/sops/My-SOP.pdf  or  https://…" />
-      </label>
-      <div class="row">
-        <label>Type
-          <select name="type"><option value="">Auto (from file extension)</option></select>
-        </label>
-        <label>Section *
-          <select name="category" required></select>
-        </label>
-      </div>
-      <label>Description<textarea name="description" rows="2"></textarea></label>
-      <label>Roles (leave blank for everyone)
-        <select name="roles" multiple size="4"></select>
-      </label>
-      <div class="row">
-        <label>Search tags (comma separated)<input name="tags" placeholder="forklift, MHE" /></label>
-        <label>Owner / contact<input name="owner" /></label>
-      </div>
-      <div class="row checks">
-        <label class="inline"><input type="checkbox" name="newStarter" /> On new starter checklist</label>
-        <label class="inline"><input type="checkbox" name="pinned" /> Show in Quick Links</label>
-      </div>
-
-      <label>Entry to paste
-        <textarea id="snippet" rows="8" readonly></textarea>
-      </label>
-
-      <div class="dialog-actions">
-        <button type="button" class="btn" id="copy-btn">Copy entry</button>
-        <button type="submit" class="btn btn-ghost" value="close">Close</button>
-      </div>
-    </form>
-  </dialog>
-
-  <script src="data/resources.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

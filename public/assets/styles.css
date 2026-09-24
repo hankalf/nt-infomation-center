@@ -68,7 +68,7 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .muted { color: var(--muted); margin: 4px 0 0; }
 .small { font-size: .875rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.collapsed { display: none !important; }
+.collapsed, [hidden] { display: none !important; }
 
 /* Header ------------------------------------------------------------------ */
 .site-header { background: var(--header); color: var(--header-ink); padding: 20px 0 14px; }

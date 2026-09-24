@@ -1,67 +1,81 @@
 # NT Information Center
 
-A one-stop page for the warehouse office. It collects SOPs, PDFs, Word documents, Excel trackers, macros, websites and contacts in one place, so a new starter can find everything about their role and the processes they follow.
+A one-stop website for the warehouse office. It collects SOPs, PDFs, Word documents, Excel trackers, macros, websites and contacts in one place, so a new starter can find everything about their role and the processes they follow.
 
-## Features
+- **Public site** (`/`): open to everyone. It has search, type and role filters, a New Starter checklist, Quick Links, favourites and a "Who to Ask" contacts panel.
+- **Admin** (`/admin`): password protected. Admins can upload documents, add website links, edit or delete resources, change their order, and manage sections, roles, contacts and the site name. Changes go live straight away.
 
-- **Search**: search by title, description, tags, owner or role. Press `/` to jump to the search box.
-- **Filter by type**: SOP, PDF, Word, Excel, Macro, PowerPoint, Website, Video, Form.
-- **"My role" filter**: shows only what's relevant to a role, such as Transport Planner. The choice is remembered.
-- **New Starter Checklist**: a tick-off list with a progress bar. Progress is saved in the browser.
-- **Quick Links**: the everyday links people use most, pinned to the top.
-- **Favourites**: anyone can tap ♡ on a card to keep their own shortlist.
-- **Who to Ask**: key contacts for a new employee.
-- **+ Add resource**: a form that writes the entry for you, ready to paste into the content file.
-- Works on desktop and mobile, supports dark mode, and prints cleanly.
+Built with Node.js and Express. Content is kept in a JSON file and uploads are stored on disk, so no database is needed.
 
-No install, no database and no build step. It's plain HTML, CSS and JavaScript.
+---
 
-## Folder layout
+## Deploying on Railway
+
+1. **Create the service.** In Railway, go to *New Project → Deploy from GitHub repo* and pick this repository. Railway detects Node and runs `npm start`.
+2. **Add a Volume.** This step matters: without a Volume, uploads and edits are wiped on every redeploy.
+   Right-click the service → *Attach Volume* → mount path **`/data`**.
+   The app finds the volume automatically through `RAILWAY_VOLUME_MOUNT_PATH`.
+3. **Set variables.** Go to the service → *Variables*:
+   | Variable | Required | What it does |
+   |---|---|---|
+   | `ADMIN_PASSWORD` | ✅ | Password for `/admin`. Use something long. Changing it signs everyone out. |
+   | `SESSION_SECRET` | optional | An extra random string used to sign the login cookie. |
+   | `MAX_UPLOAD_MB` | optional | Maximum upload size in MB (default 50). |
+4. **Get a web address.** Go to the service → *Settings → Networking → Generate Domain*, or add your own domain.
+5. Open `https://<your-domain>/admin`, sign in, and start adding material.
+
+On the first start, the app loads some example content (a welcome guide, an SOP, a handover template, a tracker and a few links). Edit or delete these from the admin page.
+
+---
+
+## Using the admin page
+
+- **Resources tab**
+  - **+ Add resource** → choose **Upload a file** (PDF, Word, Excel, `.xlsm` macro, PowerPoint, images, video…) or **Link to a website**.
+  - Pick the section, tick which roles it's for (tick none if it's for everyone), and optionally add it to the **New Starter checklist** or **Quick Links**.
+  - **Edit** changes any details or replaces the file. The old file is deleted automatically.
+  - **▲ ▼** changes the order within a section. The New Starter checklist follows this order too.
+- **Sections & Roles**: add, rename, reorder or remove sections, and edit the list of roles. A section can't be removed while it still contains resources.
+- **Contacts & Site**: the "Who to Ask" contacts, the site name and the tagline.
+
+Allowed upload types: pdf, doc/docx/dotx/rtf/odt/txt, xls/xlsx/xlsm/xlsb/xltm/xltx/xlam/csv/ods, ppt/pptx/ppsx/odp, png/jpg/gif/webp, mp4/mov/webm, zip, msg/eml, vsdx, bas.
+PDFs, images and videos open in the browser. Office files and macros download.
+
+---
+
+## Running locally
+
+```bash
+npm install
+ADMIN_PASSWORD=secret npm start
+# → http://localhost:3000   and   http://localhost:3000/admin
+```
+
+Local data is stored in `./storage` (git-ignored).
+
+## Backups
+
+All content lives in the Volume:
+```
+/data/content.json   ← every resource, section, role and contact
+/data/uploads/       ← uploaded files
+```
+Railway supports Volume backups under the service's *Backups* tab. It's worth turning these on.
+
+## Project layout
 
 ```
-index.html              ← the page
-data/resources.js       ← ALL the content (the only file you normally edit)
-files/
-  sops/                 ← SOP documents
-  forms/                ← forms & templates (Word, PDF)
-  spreadsheets/         ← Excel trackers & macro workbooks (.xlsx / .xlsm)
-  guides/               ← welcome packs, how-tos, training material
-assets/                 ← styling and page logic (no need to touch)
+server.js            Express server: public API, file serving, admin API
+lib/store.js         Reads and writes content.json, validation
+lib/auth.js          Admin password login (signed HttpOnly cookie, rate-limited)
+public/              Public site (index.html) and shared assets
+views/               Admin pages (only served by the server; login required for admin.html)
+seed/                Example content copied in on the very first start
+railway.json         Railway deploy settings (start command, health check)
 ```
 
-## Adding content
+## Security notes
 
-### A document (PDF, Word, Excel, macro, PowerPoint…)
-1. Copy the file into the right folder under `files/`, e.g. `files/sops/SOP-Despatch.pdf`.
-2. Open the site, click **+ Add resource**, fill in the form and click **Copy entry**.
-3. Open `data/resources.js` and paste the entry inside the `resources: [ … ]` list.
-4. Save and refresh the page.
-
-### A website or online system
-Do the same, but put the full web address in the link box (e.g. `https://wms.mycompany.com`). You don't need to copy a file.
-
-### Sections, roles and contacts
-These live at the top of `data/resources.js`: `categories`, `roles` and `contacts`. Add, rename or remove them there.
-
-The type (PDF, Word, Excel, Macro…) is worked out from the file extension. For example, `.xlsm` shows as a **Macro** with a reminder to click *Enable Content*. Set `type: "sop"` to label a document as an SOP.
-
-> The sample entries and files (Welcome Guide, Goods In SOP, Handover Template, Discrepancy Tracker) are **examples**. Replace them with your own. The WMS and Carrier links point to `example.com` placeholders.
-
-## Hosting it
-
-Pick whichever suits your office:
-
-| Option | How |
-|---|---|
-| **Shared network drive** | Copy the whole folder to the shared drive. People open `index.html` in their browser, and you can bookmark it or pin it as the browser home page. |
-| **GitHub Pages** | Repo → *Settings → Pages* → deploy from the `main` branch. You get a web link anyone can open. ⚠️ Only use this if the documents aren't confidential, or if your GitHub plan supports private Pages. |
-| **SharePoint / intranet** | Upload the folder to a document library or an internal web server. |
-
-### Linking to files that stay on a network drive
-If you don't want to copy a file into `files/`, you can link to it where it already is:
-`url: "file://///SERVER/Share/Warehouse/SOPs/Picking.pdf"`
-These links only work when the page is also opened from the network drive. Browsers block `file://` links from pages served over `https://`.
-
-## Notes
-- Favourites, checklist progress and the chosen role are stored **per browser**. They are not shared between people.
-- If the page shows "Couldn't load content", there's a typo in `data/resources.js`. It's usually a missing comma or bracket. Press F12 to see the line number.
+- A single shared admin password. Anyone who has it can edit content. Share it only with admins.
+- Login attempts are limited to 10 per 15 minutes per IP address. Sessions last 12 hours.
+- The public site and all uploaded documents can be seen by **anyone with the link**. Don't upload confidential material unless the site is kept private. For example, don't share the Railway domain publicly, or put it behind your company's SSO or VPN.

@@ -1,10 +1,14 @@
-(function () {
+(async function () {
   "use strict";
 
-  const content = window.NT_CONTENT;
-  if (!content) {
+  let content;
+  try {
+    const res = await fetch("/api/content", { cache: "no-cache" });
+    if (!res.ok) throw new Error(res.status);
+    content = await res.json();
+  } catch (e) {
     document.getElementById("sections").innerHTML =
-      '<div class="panel error"><h2>Couldn\'t load content</h2><p>There is probably a typo in <code>data/resources.js</code> (often a missing comma or bracket). Open the browser console (F12) to see the line number.</p></div>';
+      '<div class="panel error"><h2>Couldn\'t load content</h2><p>The server didn\'t respond. Refresh the page, or try again in a minute.</p></div>';
     return;
   }
 
@@ -324,51 +328,6 @@
     box.checked ? state.done.add(box.dataset.done) : state.done.delete(box.dataset.done);
     store.set("done", [...state.done]);
     renderStarter();
-  });
-
-  // ---------------------------------------------------------------------------
-  // "Add resource" helper — builds an entry to paste into data/resources.js
-  // ---------------------------------------------------------------------------
-  const dialog = $("#add-dialog");
-  const form = $("#add-form");
-  Object.entries(TYPES).forEach(([k, t]) => form.type.add(new Option(t.icon + " " + t.label, k)));
-  categories.forEach((c) => form.category.add(new Option(c.name, c.id)));
-  (content.roles || []).forEach((r) => form.roles.add(new Option(r, r)));
-
-  function buildSnippet() {
-    const f = form;
-    const q = (s) => JSON.stringify(s);
-    const lines = [`  title: ${q(f.title.value.trim())},`];
-    if (f.description.value.trim()) lines.push(`  description: ${q(f.description.value.trim())},`);
-    lines.push(`  url: ${q(f.url.value.trim())},`);
-    if (f.type.value) lines.push(`  type: ${q(f.type.value)},`);
-    lines.push(`  category: ${q(f.category.value)},`);
-    const roles = [...f.roles.selectedOptions].map((o) => o.value);
-    if (roles.length) lines.push(`  roles: ${JSON.stringify(roles)},`);
-    const tags = f.tags.value.split(",").map((s) => s.trim()).filter(Boolean);
-    if (tags.length) lines.push(`  tags: ${JSON.stringify(tags)},`);
-    if (f.owner.value.trim()) lines.push(`  owner: ${q(f.owner.value.trim())},`);
-    lines.push(`  updated: ${q(new Date().toISOString().slice(0, 10))},`);
-    if (f.newStarter.checked) lines.push(`  newStarter: true,`);
-    if (f.pinned.checked) lines.push(`  pinned: true,`);
-    $("#snippet").value = "{\n" + lines.join("\n") + "\n},";
-  }
-
-  form.addEventListener("input", buildSnippet);
-  form.addEventListener("change", buildSnippet);
-  $("#add-btn").addEventListener("click", () => { buildSnippet(); dialog.showModal(); });
-  $("#copy-btn").addEventListener("click", async () => {
-    if (!form.reportValidity()) return;
-    buildSnippet();
-    const btn = $("#copy-btn");
-    try {
-      await navigator.clipboard.writeText($("#snippet").value);
-    } catch (e) {
-      $("#snippet").select();
-      document.execCommand("copy");
-    }
-    btn.textContent = "Copied ✓";
-    setTimeout(() => (btn.textContent = "Copy entry"), 1500);
   });
 
   renderAll();

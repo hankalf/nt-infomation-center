@@ -1,0 +1,253 @@
+{
+  "siteName": "NT Information Center",
+  "tagline": "Everything you need for your role in the warehouse office — in one place.",
+  "roles": [
+    "Warehouse Administrator",
+    "Inventory Controller",
+    "Transport Planner",
+    "Team Leader",
+    "Supervisor",
+    "Customer Service"
+  ],
+  "categories": [
+    {
+      "id": "start",
+      "name": "Start Here",
+      "icon": "🚀",
+      "description": "Induction, welcome pack and first-week essentials."
+    },
+    {
+      "id": "sops",
+      "name": "SOPs & Processes",
+      "icon": "📋",
+      "description": "Standard Operating Procedures for every warehouse process."
+    },
+    {
+      "id": "safety",
+      "name": "Health & Safety",
+      "icon": "🦺",
+      "description": "Risk assessments, safe systems of work and emergency info."
+    },
+    {
+      "id": "systems",
+      "name": "Systems & Websites",
+      "icon": "💻",
+      "description": "WMS, carrier portals, HR system and other online tools."
+    },
+    {
+      "id": "tools",
+      "name": "Spreadsheets & Macros",
+      "icon": "📊",
+      "description": "Excel trackers, reports and macro-enabled tools."
+    },
+    {
+      "id": "forms",
+      "name": "Forms & Templates",
+      "icon": "📝",
+      "description": "Blank forms, checklists and document templates."
+    },
+    {
+      "id": "hr",
+      "name": "HR & People",
+      "icon": "👥",
+      "description": "Policies, holiday requests, rotas and training."
+    },
+    {
+      "id": "reference",
+      "name": "Reference & Training",
+      "icon": "📚",
+      "description": "Guides, videos, glossaries and how-tos."
+    }
+  ],
+  "contacts": [
+    {
+      "name": "Warehouse Manager",
+      "role": "Site lead / escalations",
+      "phone": "ext. 100",
+      "email": "manager@example.com"
+    },
+    {
+      "name": "Office Supervisor",
+      "role": "Day-to-day office questions",
+      "phone": "ext. 101",
+      "email": "office@example.com"
+    },
+    {
+      "name": "IT Helpdesk",
+      "role": "Logins, printers, PC problems",
+      "phone": "ext. 200",
+      "email": "it@example.com"
+    },
+    {
+      "name": "H&S Lead",
+      "role": "Accidents, near misses, PPE",
+      "phone": "ext. 300",
+      "email": "safety@example.com"
+    }
+  ],
+  "resources": [
+    {
+      "id": "ffe56f63c0a0",
+      "title": "Welcome to the Warehouse Office",
+      "description": "Read this first: site layout, working hours, who's who and what to expect in week one.",
+      "url": "/files/Welcome-Guide.pdf",
+      "category": "start",
+      "tags": [
+        "induction",
+        "welcome",
+        "site map",
+        "hours"
+      ],
+      "owner": "Office Supervisor",
+      "updated": "2026-09-01",
+      "newStarter": true,
+      "pinned": true,
+      "file": "Welcome-Guide.pdf"
+    },
+    {
+      "id": "0121ab414d84",
+      "title": "Goods In — Receiving SOP (example)",
+      "description": "Step-by-step: booking in a delivery, checking against the ASN, and putting away.",
+      "url": "/files/SOP-Goods-In-Receiving.pdf",
+      "type": "sop",
+      "category": "sops",
+      "roles": [
+        "Warehouse Administrator",
+        "Inventory Controller",
+        "Team Leader"
+      ],
+      "tags": [
+        "receiving",
+        "inbound",
+        "ASN",
+        "putaway",
+        "delivery"
+      ],
+      "owner": "Inbound Team Leader",
+      "updated": "2026-08-15",
+      "newStarter": true,
+      "pinned": true,
+      "file": "SOP-Goods-In-Receiving.pdf"
+    },
+    {
+      "id": "72ff180ce237",
+      "title": "Daily Handover Template",
+      "description": "Word template for the end-of-shift handover to the next team.",
+      "url": "/files/Daily-Handover-Template.docx",
+      "category": "forms",
+      "tags": [
+        "handover",
+        "shift",
+        "template"
+      ],
+      "roles": [
+        "Team Leader",
+        "Supervisor"
+      ],
+      "owner": "Office Supervisor",
+      "updated": "2026-07-20",
+      "newStarter": true,
+      "file": "Daily-Handover-Template.docx"
+    },
+    {
+      "id": "def935a0c534",
+      "title": "Stock Discrepancy Tracker",
+      "description": "Log and track stock discrepancies found during picking and cycle counts.",
+      "url": "/files/Stock-Discrepancy-Tracker.xlsx",
+      "category": "tools",
+      "roles": [
+        "Inventory Controller",
+        "Supervisor"
+      ],
+      "tags": [
+        "stock",
+        "discrepancy",
+        "cycle count",
+        "variance"
+      ],
+      "owner": "Inventory Controller",
+      "updated": "2026-09-10",
+      "pinned": true,
+      "file": "Stock-Discrepancy-Tracker.xlsx"
+    },
+    {
+      "id": "37a1849ac07a",
+      "title": "HSE — Warehousing & Storage Guidance",
+      "description": "UK Health & Safety Executive guidance for warehouses (racking, vehicles, manual handling).",
+      "url": "https://www.hse.gov.uk/logistics/",
+      "category": "safety",
+      "tags": [
+        "hse",
+        "health and safety",
+        "racking",
+        "manual handling"
+      ],
+      "newStarter": true
+    },
+    {
+      "id": "f7bd88ebf48a",
+      "title": "HSE — Lift Trucks (Forklifts)",
+      "description": "Rules and training requirements for forklift / MHE operation.",
+      "url": "https://www.hse.gov.uk/workplacetransport/lift-trucks/",
+      "category": "safety",
+      "roles": [
+        "Team Leader",
+        "Supervisor"
+      ],
+      "tags": [
+        "forklift",
+        "MHE",
+        "FLT",
+        "training"
+      ]
+    },
+    {
+      "id": "e7270e9866b7",
+      "title": "Warehouse Management System (WMS)",
+      "description": "Replace this link with your WMS login page.",
+      "url": "https://example.com/wms",
+      "category": "systems",
+      "tags": [
+        "wms",
+        "login",
+        "stock",
+        "orders"
+      ],
+      "owner": "IT Helpdesk",
+      "newStarter": true,
+      "pinned": true
+    },
+    {
+      "id": "1e4df807c681",
+      "title": "Carrier Tracking Portal",
+      "description": "Replace with your carrier's booking / tracking portal.",
+      "url": "https://example.com/carrier",
+      "category": "systems",
+      "roles": [
+        "Transport Planner",
+        "Customer Service"
+      ],
+      "tags": [
+        "carrier",
+        "tracking",
+        "courier",
+        "collection",
+        "booking"
+      ]
+    },
+    {
+      "id": "ef46ef1a334d",
+      "title": "Microsoft — Enable macros in Excel",
+      "description": "How to safely enable macros when a macro workbook shows a security warning.",
+      "url": "https://support.microsoft.com/office/enable-or-disable-macros-in-microsoft-365-files-12b036fd-d140-4e74-b45e-16fed1a7e5c6",
+      "category": "reference",
+      "tags": [
+        "excel",
+        "macro",
+        "vba",
+        "security warning",
+        "help"
+      ]
+    }
+  ]
+}

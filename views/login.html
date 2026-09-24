@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Admin sign in</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
+</head>
+<body class="login-page">
+  <main class="login-card panel">
+    <h1>🔒 Admin sign in</h1>
+    <p class="muted">Sign in to add or update documents, links and contacts.</p>
+    <p id="error" class="alert" hidden></p>
+    <form method="post" action="/admin/login">
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required autofocus />
+      </label>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <p class="small"><a href="/">← Back to the Information Center</a></p>
+  </main>
+  <script>
+    (function () {
+      var messages = {
+        wrong: "That password isn't right. Please try again.",
+        locked: "Too many attempts. Please wait 15 minutes and try again.",
+        disabled: "Admin is turned off. Set the ADMIN_PASSWORD variable on the server to enable it.",
+      };
+      var code = new URLSearchParams(location.search).get("error");
+      if (code && messages[code]) {
+        var el = document.getElementById("error");
+        el.textContent = messages[code];
+        el.hidden = false;
+      }
+    })();
+  </script>
+</body>
+</html>
