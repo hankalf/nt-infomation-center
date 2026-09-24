@@ -3,7 +3,7 @@
 const path = require("path");
 const express = require("express");
 const multer = require("multer");
-const { Store, ValidationError, cleanResource, cleanSettings, newId, slug } = require("./lib/store");
+const { Store, ValidationError, cleanResource, cleanSettings, cleanAccess, newId, slug } = require("./lib/store");
 const { createAuth } = require("./lib/auth");
 
 // ---------------------------------------------------------------------------
@@ -57,6 +57,23 @@ const upload = multer({
   },
 });
 
+const LOGO_EXT = new Set(["png", "jpg", "jpeg", "gif", "webp", "svg"]);
+const logoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, store.uploadsDir),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).slice(1).toLowerCase();
+      cb(null, `logo-${newId().slice(0, 6)}.${ext}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).slice(1).toLowerCase();
+    if (LOGO_EXT.has(ext)) return cb(null, true);
+    cb(new ValidationError("The logo must be an image: PNG, JPG, GIF, WebP or SVG."));
+  },
+});
+
 // ---------------------------------------------------------------------------
 // App
 // ---------------------------------------------------------------------------
@@ -78,14 +95,16 @@ app.get("/healthz", (req, res) => res.send("ok"));
 // ----- Public ---------------------------------------------------------------
 app.get("/api/content", (req, res) => {
   res.set("Cache-Control", "no-cache");
-  res.json(store.get());
+  // The access checklist (system names, folder paths) is admin-only.
+  const { access, ...publicContent } = store.get();
+  res.json(publicContent);
 });
 
 app.get("/files/:name", (req, res) => {
   const p = store.uploadPath(req.params.name);
   if (!p) return res.status(404).send("Not found");
   const ext = path.extname(p).slice(1).toLowerCase();
-  const inline = ["pdf", "png", "jpg", "jpeg", "gif", "webp", "mp4", "webm", "mov", "txt"].includes(ext);
+  const inline = ["pdf", "svg", "png", "jpg", "jpeg", "gif", "webp", "mp4", "webm", "mov", "txt"].includes(ext);
   res.set("Content-Security-Policy", "sandbox");
   const opts = { maxAge: "1h", dotfiles: "deny" };
   if (inline) return res.sendFile(p, opts, (err) => err && !res.headersSent && res.status(404).send("Not found"));
@@ -198,16 +217,76 @@ admin.put("/settings", async (req, res) => {
   const settings = await store.update((c) => {
     const s = cleanSettings(req.body || {}, c);
     Object.assign(c, s);
-    // Drop role tags that no longer exist
-    c.resources.forEach((r) => {
-      if (r.roles) {
-        r.roles = r.roles.filter((x) => s.roles.includes(x));
-        if (!r.roles.length) delete r.roles;
+    // Drop role / department tags that no longer exist
+    [...c.resources, ...c.access].forEach((item) => {
+      for (const [key, allowed] of [["roles", s.roles], ["departments", s.departments]]) {
+        if (!item[key]) continue;
+        item[key] = item[key].filter((x) => allowed.includes(x));
+        if (!item[key].length) delete item[key];
       }
     });
     return s;
   });
   res.json(settings);
+});
+
+admin.get("/content", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(store.get());
+});
+
+// ----- Access checklist items (admin only) -----
+admin.post("/access", async (req, res) => {
+  const item = await store.update((c) => {
+    const a = { id: newId(), ...cleanAccess(req.body || {}, c) };
+    c.access.push(a);
+    return a;
+  });
+  res.status(201).json(item);
+});
+
+admin.put("/access/:id", async (req, res) => {
+  const item = await store.update((c) => {
+    const i = c.access.findIndex((a) => a.id === req.params.id);
+    if (i < 0) throw Object.assign(new ValidationError("That item no longer exists."), { status: 404 });
+    c.access[i] = { id: c.access[i].id, ...cleanAccess(req.body || {}, c) };
+    return c.access[i];
+  });
+  res.json(item);
+});
+
+admin.delete("/access/:id", async (req, res) => {
+  await store.update((c) => {
+    c.access = c.access.filter((a) => a.id !== req.params.id);
+  });
+  res.json({ ok: true });
+});
+
+// Logo: upload replaces the current one; DELETE removes it.
+admin.post("/logo", logoUpload.single("logo"), async (req, res) => {
+  if (!req.file) throw new ValidationError("Choose an image to upload.");
+  let old = null;
+  try {
+    await store.update((c) => {
+      old = c.logo;
+      c.logo = req.file.filename;
+    });
+  } catch (err) {
+    await store.removeUpload(req.file.filename);
+    throw err;
+  }
+  if (old) await store.removeUpload(old);
+  res.json({ logo: req.file.filename });
+});
+
+admin.delete("/logo", async (req, res) => {
+  const old = await store.update((c) => {
+    const prev = c.logo;
+    delete c.logo;
+    return prev;
+  });
+  if (old) await store.removeUpload(old);
+  res.json({ ok: true });
 });
 
 app.use("/api/admin", admin);
@@ -219,7 +298,8 @@ app.use(express.static(PUBLIC, { index: "index.html", extensions: ["html"] }));
 app.use((err, req, res, next) => {
   if (err instanceof ValidationError) return res.status(err.status || 400).json({ error: err.message });
   if (err instanceof multer.MulterError) {
-    const msg = err.code === "LIMIT_FILE_SIZE" ? `File is too big (max ${MAX_UPLOAD_MB} MB).` : err.message;
+    const max = req.path.endsWith("/logo") ? 5 : MAX_UPLOAD_MB;
+    const msg = err.code === "LIMIT_FILE_SIZE" ? `File is too big (max ${max} MB).` : err.message;
     return res.status(400).json({ error: msg });
   }
   console.error(err);

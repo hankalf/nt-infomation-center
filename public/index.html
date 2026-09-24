@@ -11,7 +11,7 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <div class="brand">
-        <span class="brand-mark" aria-hidden="true">📦</span>
+        <span class="brand-mark" id="brand-mark" aria-hidden="true">📦</span>
         <div>
           <h1 id="site-name">NT Information Center</h1>
           <p id="site-tagline" class="tagline"></p>
@@ -25,6 +25,10 @@
         <span class="sr-only">Search resources</span>
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="search" type="search" placeholder="Search SOPs, forms, systems… (press / to focus)" autocomplete="off" />
+      </label>
+      <label class="role-select">
+        <span>Department</span>
+        <select id="dept"><option value="">All departments</option></select>
       </label>
       <label class="role-select">
         <span>My role</span>
@@ -73,13 +77,23 @@
         <h2>📞 Who to Ask</h2>
         <div id="contact-list" class="contact-grid"></div>
       </section>
+
     </div>
   </main>
+
+  <div class="wrap org-wrap">
+    <section id="org" class="panel" hidden>
+      <h2>🏢 Org Chart</h2>
+      <p id="org-note" class="muted small"></p>
+      <div id="org-chart"></div>
+    </section>
+  </div>
 
   <footer class="site-footer wrap">
     <p>Something missing or out of date? Let your supervisor or an admin know.</p>
   </footer>
 
+  <script src="assets/orgchart.js"></script>
   <script src="assets/app.js"></script>
 </body>
 </html>

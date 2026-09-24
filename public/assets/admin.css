@@ -99,7 +99,70 @@ dialog legend { font-size: .875rem; font-weight: 600; padding: 0 4px; }
 }
 .login-card .muted { margin: 0; }
 
+/* Two-column panels */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.two-col .panel { margin: 0; }
+
+/* Site details + logo */
+.site-details { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.site-details .grow { flex: 1 1 320px; }
+.logo-box { width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.logo-box p { margin: 0; }
+.logo-preview {
+  height: 96px; border: 2px dashed var(--border); border-radius: 12px; display: grid; place-items: center;
+  background: repeating-conic-gradient(var(--surface-2) 0 25%, var(--surface) 0 50%) 0 0 / 16px 16px; overflow: hidden;
+}
+.logo-preview img { max-height: 84px; max-width: 220px; object-fit: contain; }
+.logo-actions { display: flex; gap: 8px; }
+.tab-panel label.file-btn { display: inline-flex; flex-direction: row; margin: 0; font-weight: 600; cursor: pointer; position: relative; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+
+/* People rows */
+.person-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; }
+.person-row label.grow { grid-column: span 2; }
+.person-row .who { flex-direction: row !important; align-items: center; gap: 6px; font-weight: 600; padding-bottom: 10px; }
+.person-row .who input { width: auto; }
+.person-row .btn-danger { justify-self: end; margin-bottom: 4px; }
+.edit-row select { font: inherit; font-weight: 400; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); width: 100%; }
+#org-preview { --line: var(--muted); }
+
+/* Access checklist */
+.access-table { width: 100%; border-collapse: collapse; font-size: .92rem; margin-top: 12px; }
+.access-table th, .access-table td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.access-table th { font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.access-table .tick { width: 36px; text-align: center; }
+.access-table .tick input { width: 18px; height: 18px; accent-color: var(--t-excel); }
+.access-table .kind { font-size: .78rem; color: var(--muted); }
+.access-table .mono { font-family: ui-monospace, Consolas, monospace; font-size: .82rem; word-break: break-all; }
+.access-table tr:has(input:checked) td:not(.tick) { color: var(--muted); text-decoration: line-through; }
+.toolbar #chk-name { flex: 1 1 220px; }
+.print-only { display: none; }
+
+@media print {
+  body.printing-access .site-header, body.printing-access .tab-panel:not(#tab-access),
+  body.printing-access .no-print, body.printing-access #toast { display: none !important; }
+  body.printing-access #tab-access { display: block !important; }
+  body.printing-access .panel { border: 0; box-shadow: none; padding: 0; }
+  body.printing-access .print-only { display: block; }
+  body.printing-access th.print-only, body.printing-access td.print-only { display: table-cell; width: 90px; }
+  body.printing-access .panel-head { display: none; }
+  body.printing-access .access-table td { color: #000 !important; text-decoration: none !important; }
+  .print-heading h1 { font-size: 1.3rem; margin-bottom: 6px; }
+}
+
+@media (max-width: 900px) {
+  .person-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .two-col { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
+  .person-row { grid-template-columns: 1fr; }
+  .person-row label.grow { grid-column: auto; }
+  .access-table thead { display: none; }
+  .access-table tr { display: grid; grid-template-columns: 36px 1fr; border-bottom: 1px solid var(--border); padding: 6px 0; }
+  .access-table td { border: 0; padding: 2px 8px; }
+  .access-table td:not(.tick):not(:nth-child(2)) { grid-column: 2; }
+  .access-table .tick { grid-row: span 4; }
   .res-list li { flex-wrap: wrap; }
   .res-actions { width: 100%; justify-content: flex-end; }
   .header-actions { width: 100%; }

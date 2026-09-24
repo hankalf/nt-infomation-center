@@ -64,7 +64,7 @@
       _id: r.id || slug(r.title) + "-" + i,
       _type: type,
       _search: [r.title, r.description, (r.tags || []).join(" "), r.owner, TYPES[type].label,
-        (catById[r.category] || {}).name, (r.roles || []).join(" ")].join(" ").toLowerCase(),
+        (catById[r.category] || {}).name, (r.roles || []).join(" "), (r.departments || []).join(" ")].join(" ").toLowerCase(),
     };
   });
 
@@ -85,6 +85,7 @@
     query: "",
     type: "",
     role: store.get("role", ""),
+    dept: store.get("dept", ""),
     favs: new Set(store.get("favs", [])),
     done: new Set(store.get("done", [])),
   };
@@ -101,8 +102,11 @@
   }
   const $ = (sel) => document.querySelector(sel);
 
+  // "Relevant to me": matches the chosen role AND department (untagged = everyone).
   function matchesRole(r) {
-    return !state.role || !r.roles || r.roles.length === 0 || r.roles.includes(state.role);
+    const roleOk = !state.role || !r.roles || r.roles.length === 0 || r.roles.includes(state.role);
+    const deptOk = !state.dept || !r.departments || r.departments.length === 0 || r.departments.includes(state.dept);
+    return roleOk && deptOk;
   }
   function matches(r) {
     if (!matchesRole(r)) return false;
@@ -135,8 +139,9 @@
       r.owner ? `<span title="Owner">👤 ${esc(r.owner)}</span>` : "",
       r.updated ? `<span title="Last reviewed">🗓️ ${formatDate(r.updated)}</span>` : "",
     ].join("");
-    const roles = r.roles && r.roles.length
-      ? `<div class="roles">${r.roles.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : "";
+    const tagsList = [...(r.departments || []).map((x) => "🏢 " + x), ...(r.roles || [])];
+    const roles = tagsList.length
+      ? `<div class="roles">${tagsList.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : "";
     const hint = r._type === "macro"
       ? `<p class="hint">⚠️ Download, open in Excel and click <em>Enable Content</em>.</p>` : "";
 
@@ -193,10 +198,12 @@
       const n = filtered.filter((r) => r.category === c.id).length;
       return `<li><a href="#cat-${esc(c.id)}" class="${n ? "" : "dim"}">
         <span>${esc(c.icon || "")} ${esc(c.name)}</span><span class="count">${n}</span></a></li>`;
-    }).join("");
+    }).join("") +
+      ($("#contacts").hidden ? "" : `<li class="nav-sep"><a href="#contacts"><span>📞 Who to Ask</span></a></li>`) +
+      ($("#org").hidden ? "" : `<li><a href="#org"><span>🏢 Org Chart</span></a></li>`);
 
     // Hide the "home" panels while searching so results are front and centre
-    ["#starter", "#quick", "#favourites", "#contacts"].forEach((s) =>
+    ["#starter", "#quick", "#favourites", "#contacts", "#org"].forEach((s) =>
       $(s).classList.toggle("collapsed", Boolean(filtering)));
   }
 
@@ -233,16 +240,30 @@
     $("#fav-list").innerHTML = items.map(card).join("");
   }
 
+  function inMyDept(p) {
+    return !state.dept || !p.department || p.department === state.dept;
+  }
+
   function renderContacts() {
-    const list = content.contacts || [];
+    const list = (content.people || []).filter((p) => p.showInContacts && inMyDept(p));
     $("#contacts").hidden = !list.length;
     $("#contact-list").innerHTML = list.map((c) => `
       <div class="contact">
-        <strong>${esc(c.name)}</strong>
-        ${c.role ? `<span class="muted small">${esc(c.role)}</span>` : ""}
+        <strong>${esc(c.name || c.jobTitle)}</strong>
+        ${c.name && c.jobTitle ? `<span class="job">${esc(c.jobTitle)}${c.department ? " · " + esc(c.department) : ""}</span>` : ""}
+        ${c.responsibilities ? `<span class="muted small">${esc(c.responsibilities)}</span>` : ""}
         ${c.phone ? `<span>☎️ ${esc(c.phone)}</span>` : ""}
         ${c.email ? `<a href="mailto:${esc(c.email)}">✉️ ${esc(c.email)}</a>` : ""}
       </div>`).join("");
+  }
+
+  function renderOrg() {
+    const html = window.renderOrgChart ? window.renderOrgChart(content.people, { department: state.dept }) : "";
+    $("#org").hidden = !html;
+    $("#org-chart").innerHTML = html;
+    $("#org-note").textContent = state.dept
+      ? `People in ${state.dept} are highlighted. Hover or tap a person for contact details.`
+      : "Hover or tap a person for contact details.";
   }
 
   function renderTypeFilters() {
@@ -259,8 +280,9 @@
     renderStarter();
     renderQuick();
     renderFavs();
-    renderSections();
     renderContacts();
+    renderOrg();
+    renderSections();
   }
 
   // ---------------------------------------------------------------------------
@@ -269,6 +291,11 @@
   document.title = content.siteName || document.title;
   $("#site-name").textContent = content.siteName || "Information Center";
   $("#site-tagline").textContent = content.tagline || "";
+  if (content.logo) {
+    const src = "/files/" + encodeURIComponent(content.logo);
+    $("#brand-mark").innerHTML = `<img class="brand-logo" src="${src}" alt="" />`;
+    document.querySelector('link[rel="icon"]').href = src;
+  }
 
   const roleSel = $("#role");
   (content.roles || []).forEach((r) => roleSel.add(new Option(r, r)));
@@ -277,6 +304,18 @@
   roleSel.addEventListener("change", () => {
     state.role = roleSel.value;
     store.set("role", state.role);
+    renderAll();
+  });
+
+  const deptSel = $("#dept");
+  const departments = content.departments || [];
+  departments.forEach((d) => deptSel.add(new Option(d, d)));
+  if (state.dept && !departments.includes(state.dept)) state.dept = "";
+  deptSel.value = state.dept;
+  deptSel.closest("label").hidden = !departments.length;
+  deptSel.addEventListener("change", () => {
+    state.dept = deptSel.value;
+    store.set("dept", state.dept);
     renderAll();
   });
 

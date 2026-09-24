@@ -26,8 +26,9 @@
     </div>
     <nav class="wrap tabs" role="tablist">
       <button type="button" role="tab" class="tab active" data-tab="resources" aria-selected="true">📄 Resources</button>
-      <button type="button" role="tab" class="tab" data-tab="sections" aria-selected="false">🗂️ Sections &amp; Roles</button>
-      <button type="button" role="tab" class="tab" data-tab="contacts" aria-selected="false">📞 Contacts &amp; Site</button>
+      <button type="button" role="tab" class="tab" data-tab="sections" aria-selected="false">🗂️ Sections, Roles &amp; Departments</button>
+      <button type="button" role="tab" class="tab" data-tab="contacts" aria-selected="false">👥 People &amp; Site</button>
+      <button type="button" role="tab" class="tab" data-tab="access" aria-selected="false">🔑 Access Checklist</button>
     </nav>
   </header>
 
@@ -38,11 +39,12 @@
         <button type="button" class="btn" id="new-resource">+ Add resource</button>
         <input type="search" id="admin-search" placeholder="Filter resources…" />
         <select id="admin-section"><option value="">All sections</option></select>
+        <select id="admin-dept"><option value="">All departments</option></select>
       </div>
       <div id="resource-list"></div>
     </section>
 
-    <!-- SECTIONS & ROLES -->
+    <!-- SECTIONS, ROLES & DEPARTMENTS -->
     <section id="tab-sections" class="tab-panel" hidden>
       <div class="panel">
         <h2>Sections</h2>
@@ -50,28 +52,84 @@
         <div id="section-rows" class="edit-rows"></div>
         <button type="button" class="btn btn-ghost" id="add-section">+ Add section</button>
       </div>
-      <div class="panel">
-        <h2>Roles</h2>
-        <p class="muted">One per line. These appear in the "My role" filter and can be ticked on each resource.</p>
-        <textarea id="roles" rows="8"></textarea>
+      <div class="two-col">
+        <div class="panel">
+          <h2>Departments</h2>
+          <p class="muted">One per line. Used for the "Department" filter, people, resources and the access checklist.</p>
+          <textarea id="departments" rows="8"></textarea>
+        </div>
+        <div class="panel">
+          <h2>Roles</h2>
+          <p class="muted">One per line. These appear in the "My role" filter and can be ticked on each resource.</p>
+          <textarea id="roles" rows="8"></textarea>
+        </div>
       </div>
-      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save sections &amp; roles</button></div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save sections, roles &amp; departments</button></div>
     </section>
 
-    <!-- CONTACTS & SITE -->
+    <!-- PEOPLE & SITE -->
     <section id="tab-contacts" class="tab-panel" hidden>
       <div class="panel">
         <h2>Site details</h2>
-        <label>Site name<input id="siteName" /></label>
-        <label>Tagline<input id="tagline" /></label>
+        <div class="site-details">
+          <div class="logo-box">
+            <div id="logo-preview" class="logo-preview"><span class="muted small">No logo</span></div>
+            <div class="logo-actions">
+              <label class="btn btn-small btn-ghost file-btn">Upload logo…
+                <input type="file" id="logo-file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,image/*" />
+              </label>
+              <button type="button" class="btn btn-small btn-danger" id="logo-remove" hidden>Remove</button>
+            </div>
+            <p class="muted small">PNG, JPG, SVG or WebP, up to 5 MB. A wide logo with a transparent background works best.</p>
+          </div>
+          <div class="grow">
+            <label>Site name<input id="siteName" /></label>
+            <label>Tagline<input id="tagline" /></label>
+          </div>
+        </div>
       </div>
       <div class="panel">
-        <h2>Who to Ask</h2>
-        <p class="muted">Key contacts shown at the bottom of the public page.</p>
-        <div id="contact-rows" class="edit-rows"></div>
-        <button type="button" class="btn btn-ghost" id="add-contact">+ Add contact</button>
+        <h2>People</h2>
+        <p class="muted">Everyone listed here appears in the org chart. Set <strong>Reports to</strong> to build the chart, and tick <strong>Who to Ask</strong> to also show them as a key contact.</p>
+        <div id="people-rows" class="edit-rows"></div>
+        <button type="button" class="btn btn-ghost" id="add-person">+ Add person</button>
       </div>
-      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save contacts &amp; site details</button></div>
+      <div class="panel">
+        <h2>Org chart preview</h2>
+        <p class="muted small">Updates as you type. Remember to save.</p>
+        <div id="org-preview"></div>
+      </div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save people &amp; site details</button></div>
+    </section>
+
+    <!-- ACCESS CHECKLIST -->
+    <section id="tab-access" class="tab-panel" hidden>
+      <div class="panel print-area">
+        <div class="panel-head">
+          <div>
+            <h2>New starter access checklist</h2>
+            <p class="muted">Pick a department and role to see every system, folder and mailbox that person needs. Print it or tick items off as access is set up.</p>
+          </div>
+          <button type="button" class="btn btn-ghost no-print" id="print-access">🖨️ Print</button>
+        </div>
+        <div class="toolbar no-print">
+          <input id="chk-name" placeholder="Employee name (optional)" />
+          <select id="chk-dept"><option value="">Any department</option></select>
+          <select id="chk-role"><option value="">Any role</option></select>
+        </div>
+        <div id="access-checklist"></div>
+      </div>
+
+      <div class="panel no-print">
+        <div class="panel-head">
+          <div>
+            <h2>Access items</h2>
+            <p class="muted">Everything a person might need access to. Tag each item with the departments and roles that need it. Leave both empty if everyone needs it. Only admins can see this list.</p>
+          </div>
+          <button type="button" class="btn" id="new-access">+ Add access item</button>
+        </div>
+        <div id="access-list"></div>
+      </div>
     </section>
   </main>
 
@@ -106,6 +164,10 @@
       <label>Description<textarea name="description" rows="2" maxlength="1000" placeholder="What is it and when would someone use it?"></textarea></label>
 
       <fieldset>
+        <legend>Relevant departments <span class="muted small">(none ticked = all departments)</span></legend>
+        <div id="dept-checks" class="checks-grid"></div>
+      </fieldset>
+      <fieldset>
         <legend>Relevant roles <span class="muted small">(none ticked = everyone)</span></legend>
         <div id="role-checks" class="checks-grid"></div>
       </fieldset>
@@ -129,8 +191,48 @@
     </form>
   </dialog>
 
+  <!-- Add / edit access item -->
+  <dialog id="access-dialog">
+    <form id="access-form">
+      <h2 id="access-title">Add access item</h2>
+      <p id="access-error" class="alert" hidden></p>
+      <div class="row">
+        <label>Name *<input name="name" required maxlength="200" placeholder="e.g. WMS, Stock shared folder" /></label>
+        <label>Type<select name="kind">
+          <option value="system">💻 System / login</option>
+          <option value="folder">📁 Shared folder</option>
+          <option value="email">✉️ Email / mailbox / group</option>
+          <option value="hardware">🔑 Hardware / keys / fob</option>
+          <option value="training">🎓 Training / licence</option>
+          <option value="other">📌 Other</option>
+        </select></label>
+      </div>
+      <label>Location / link <span class="muted small">(folder path, web address or mailbox)</span>
+        <input name="location" maxlength="1000" placeholder="\\SERVER\Share\Folder  or  https://…" />
+      </label>
+      <div class="row">
+        <label>How to request<input name="howToRequest" maxlength="1000" placeholder="e.g. IT ticket, ask the Transport Planner" /></label>
+        <label>Approver<input name="approver" maxlength="200" /></label>
+      </div>
+      <fieldset>
+        <legend>Departments that need it <span class="muted small">(none ticked = all)</span></legend>
+        <div id="access-dept-checks" class="checks-grid"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Roles that need it <span class="muted small">(none ticked = all)</span></legend>
+        <div id="access-role-checks" class="checks-grid"></div>
+      </fieldset>
+      <label>Notes<textarea name="notes" rows="2" maxlength="1000" placeholder="Permission level, e.g. read only"></textarea></label>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-access">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" role="status" aria-live="polite"></div>
 
+  <script src="/assets/orgchart.js"></script>
   <script src="/assets/admin.js"></script>
 </body>
 </html>

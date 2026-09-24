@@ -35,10 +35,28 @@
   }
 
   async function reload() {
-    const res = await fetch("/api/content", { cache: "no-cache" });
-    content = await res.json();
+    content = await api("GET", "/api/admin/content");
+    content.departments = content.departments || [];
+    content.people = content.people || [];
+    content.access = content.access || [];
     $("#site-name").textContent = content.siteName || "Information Center";
     renderResources();
+    renderAccess();
+  }
+
+  /** A grid of checkboxes, e.g. for roles or departments. */
+  function checkboxes(container, name, values, selected, emptyMsg) {
+    const sel = new Set(selected || []);
+    container.innerHTML = values.map((v) =>
+      `<label class="inline"><input type="checkbox" name="${name}" value="${esc(v)}" ${sel.has(v) ? "checked" : ""} /> ${esc(v)}</label>`).join("")
+      || `<span class="muted small">${emptyMsg}</span>`;
+  }
+  const checked = (form, name) => [...form.querySelectorAll(`[name="${name}"]:checked`)].map((b) => b.value);
+
+  function fillSelect(sel, values, firstLabel) {
+    const current = sel.value;
+    sel.innerHTML = `<option value="">${esc(firstLabel)}</option>` + values.map((v) => `<option>${esc(v)}</option>`).join("");
+    sel.value = values.includes(current) ? current : "";
   }
 
   function toast(msg, isError) {
@@ -58,7 +76,8 @@
       b.setAttribute("aria-selected", b === btn);
     });
     document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.id !== "tab-" + btn.dataset.tab));
-    if (btn.dataset.tab !== "resources") renderSettings();
+    if (btn.dataset.tab === "sections" || btn.dataset.tab === "contacts") renderSettings();
+    if (btn.dataset.tab === "access") renderAccess();
   }));
 
   // ---------------------------------------------------------------------------
@@ -80,6 +99,9 @@
       content.categories.map((c) => `<option value="${esc(c.id)}">${esc(c.icon)} ${esc(c.name)}</option>`).join("");
     sectionSel.value = content.categories.some((c) => c.id === current) ? current : "";
 
+    fillSelect($("#admin-dept"), content.departments, "All departments");
+    $("#admin-dept").hidden = !content.departments.length;
+    const filterDept = $("#admin-dept").value;
     const q = $("#admin-search").value.trim().toLowerCase();
     const filterCat = sectionSel.value;
 
@@ -87,9 +109,10 @@
     content.categories.forEach((cat) => {
       if (filterCat && cat.id !== filterCat) return;
       const all = content.resources.filter((r) => r.category === cat.id);
-      const items = all.filter((r) => !q ||
-        [r.title, r.description, (r.tags || []).join(" "), r.owner, r.file].join(" ").toLowerCase().includes(q));
-      if (q && !items.length) return;
+      const items = all.filter((r) => (!q ||
+        [r.title, r.description, (r.tags || []).join(" "), r.owner, r.file].join(" ").toLowerCase().includes(q)) &&
+        (!filterDept || !r.departments || !r.departments.length || r.departments.includes(filterDept)));
+      if ((q || filterDept) && !items.length) return;
       html += `<div class="panel group">
         <h2>${esc(cat.icon)} ${esc(cat.name)} <span class="count">${all.length}</span></h2>
         ${items.length ? `<ul class="res-list">${items.map((r) => {
@@ -108,6 +131,7 @@
               </div>
               <div class="res-meta muted small">
                 ${r.file ? `📎 ${esc(r.file)}` : `🔗 ${esc(r.url)}`}
+                ${r.departments && r.departments.length ? ` · 🏢 ${esc(r.departments.join(", "))}` : ""}
                 ${r.roles && r.roles.length ? ` · 👥 ${esc(r.roles.join(", "))}` : ""}
                 ${r.updated ? ` · 🗓️ ${esc(r.updated)}` : ""}
               </div>
@@ -132,6 +156,7 @@
 
   $("#admin-search").addEventListener("input", renderResources);
   $("#admin-section").addEventListener("change", renderResources);
+  $("#admin-dept").addEventListener("change", renderResources);
 
   $("#resource-list").addEventListener("click", async (e) => {
     const edit = e.target.closest("[data-edit]");
@@ -190,9 +215,11 @@
 
     form.category.innerHTML = content.categories.map((c) =>
       `<option value="${esc(c.id)}">${esc(c.icon)} ${esc(c.name)}</option>`).join("");
-    $("#role-checks").innerHTML = content.roles.map((role) =>
-      `<label class="inline"><input type="checkbox" name="roles" value="${esc(role)}" /> ${esc(role)}</label>`).join("")
-      || '<span class="muted small">No roles set up yet (see Sections &amp; Roles).</span>';
+    checkboxes($("#role-checks"), "roles", content.roles, r && r.roles,
+      "No roles set up yet (see Sections, Roles &amp; Departments).");
+    checkboxes($("#dept-checks"), "departments", content.departments,
+      r ? r.departments : ($("#admin-dept").value ? [$("#admin-dept").value] : []),
+      "No departments set up yet (see Sections, Roles &amp; Departments).");
 
     const filterCat = $("#admin-section").value;
     form.title.value = r ? r.title : "";
@@ -204,11 +231,6 @@
     form.updated.value = (r && r.updated) || new Date().toISOString().slice(0, 10);
     form.newStarter.checked = Boolean(r && r.newStarter);
     form.pinned.checked = Boolean(r && r.pinned);
-    ((r && r.roles) || []).forEach((role) => {
-      const box = [...form.querySelectorAll('[name="roles"]')].find((b) => b.value === role);
-      if (box) box.checked = true;
-    });
-
     const hasFile = Boolean(r && r.file);
     $("#current-file").hidden = !hasFile;
     $("#current-file").innerHTML = hasFile
@@ -245,7 +267,8 @@
 
     const fd = new FormData();
     ["title", "description", "category", "type", "tags", "owner", "updated"].forEach((k) => fd.append(k, form[k].value));
-    fd.append("roles", [...form.querySelectorAll('[name="roles"]:checked')].map((b) => b.value).join(","));
+    fd.append("roles", checked(form, "roles").join(","));
+    fd.append("departments", checked(form, "departments").join(","));
     fd.append("newStarter", form.newStarter.checked);
     fd.append("pinned", form.pinned.checked);
     if (source === "link") fd.append("url", form.url.value.trim());
@@ -273,20 +296,28 @@
   });
 
   // ---------------------------------------------------------------------------
-  // Settings: sections, roles, contacts, site details
+  // Settings: sections, roles, departments, people, site details
   // ---------------------------------------------------------------------------
   let draft = null;
+  const tempId = () => "p" + Math.random().toString(36).slice(2, 10);
+
+  function personLabel(p) {
+    return [p.name, p.jobTitle].filter(Boolean).join(" — ") || "(unnamed)";
+  }
 
   function renderSettings() {
     if (!draft) {
       draft = {
         categories: content.categories.map((c) => ({ ...c })),
-        contacts: content.contacts.map((c) => ({ ...c })),
+        people: content.people.map((p) => ({ ...p })),
       };
       $("#roles").value = content.roles.join("\n");
+      $("#departments").value = content.departments.join("\n");
       $("#siteName").value = content.siteName || "";
       $("#tagline").value = content.tagline || "";
     }
+    renderLogo();
+
     $("#section-rows").innerHTML = draft.categories.map((c, i) => {
       const used = content.resources.filter((r) => r.category === c.id).length;
       return `<div class="edit-row section-row" data-i="${i}">
@@ -301,23 +332,42 @@
       </div>`;
     }).join("");
 
-    $("#contact-rows").innerHTML = draft.contacts.map((c, i) => `
-      <div class="edit-row contact-row" data-i="${i}">
-        <label>Name<input data-k="name" value="${esc(c.name)}" /></label>
-        <label>What to ask them about<input data-k="role" value="${esc(c.role)}" /></label>
-        <label>Phone<input data-k="phone" value="${esc(c.phone)}" /></label>
-        <label>Email<input data-k="email" type="email" value="${esc(c.email)}" /></label>
-        <button type="button" class="btn btn-small btn-danger" data-contact-remove>Remove</button>
-      </div>`).join("") || '<p class="empty">No contacts yet.</p>';
+    renderPeople();
+  }
+
+  function currentDepartments() {
+    return $("#departments").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  }
+
+  function renderPeople() {
+    const depts = currentDepartments();
+    $("#people-rows").innerHTML = draft.people.map((p, i) => {
+      const bossOptions = draft.people.filter((o) => o.id !== p.id).map((o) =>
+        `<option value="${esc(o.id)}" ${o.id === p.reportsTo ? "selected" : ""}>${esc(personLabel(o))}</option>`).join("");
+      const deptOptions = depts.map((d) => `<option ${d === p.department ? "selected" : ""}>${esc(d)}</option>`).join("");
+      return `<div class="edit-row person-row" data-i="${i}">
+        <label>Name<input data-k="name" value="${esc(p.name)}" maxlength="120" placeholder="e.g. Sam Patel" /></label>
+        <label>Job title / role<input data-k="jobTitle" value="${esc(p.jobTitle)}" maxlength="120" placeholder="e.g. Office Supervisor" /></label>
+        <label>Department<select data-k="department"><option value="">—</option>${deptOptions}</select></label>
+        <label>Reports to<select data-k="reportsTo"><option value="">— Nobody (top level)</option>${bossOptions}</select></label>
+        <label class="grow">What to ask them about<input data-k="responsibilities" value="${esc(p.responsibilities)}" maxlength="300" /></label>
+        <label>Phone<input data-k="phone" value="${esc(p.phone)}" maxlength="60" /></label>
+        <label>Email<input data-k="email" type="email" value="${esc(p.email)}" maxlength="200" /></label>
+        <label class="inline who"><input type="checkbox" data-k="showInContacts" ${p.showInContacts ? "checked" : ""} /> Who to Ask</label>
+        <button type="button" class="btn btn-small btn-danger" data-person-remove>Remove</button>
+      </div>`;
+    }).join("") || '<p class="empty">No people yet.</p>';
+    renderOrgPreview();
+  }
+
+  function renderOrgPreview() {
+    $("#org-preview").innerHTML = window.renderOrgChart(draft.people) ||
+      '<p class="empty">Add people above to build the chart.</p>';
   }
 
   $("#section-rows").addEventListener("input", (e) => {
     const row = e.target.closest("[data-i]");
     if (row && e.target.dataset.k) draft.categories[row.dataset.i][e.target.dataset.k] = e.target.value;
-  });
-  $("#contact-rows").addEventListener("input", (e) => {
-    const row = e.target.closest("[data-i]");
-    if (row && e.target.dataset.k) draft.contacts[row.dataset.i][e.target.dataset.k] = e.target.value;
   });
   $("#section-rows").addEventListener("click", (e) => {
     const row = e.target.closest("[data-i]");
@@ -331,23 +381,41 @@
     }
     renderSettings();
   });
-  $("#contact-rows").addEventListener("click", (e) => {
-    const row = e.target.closest("[data-i]");
-    if (row && e.target.closest("[data-contact-remove]")) {
-      draft.contacts.splice(Number(row.dataset.i), 1);
-      renderSettings();
-    }
-  });
   $("#add-section").addEventListener("click", () => {
     draft.categories.push({ id: "", name: "", icon: "📁", description: "" });
     renderSettings();
     const inputs = document.querySelectorAll('#section-rows [data-k="name"]');
     inputs[inputs.length - 1].focus();
   });
-  $("#add-contact").addEventListener("click", () => {
-    draft.contacts.push({ name: "", role: "", phone: "", email: "" });
-    renderSettings();
-    const inputs = document.querySelectorAll('#contact-rows [data-k="name"]');
+
+  function onPersonEdit(e) {
+    const row = e.target.closest("[data-i]");
+    const k = e.target.dataset.k;
+    if (!row || !k) return;
+    const p = draft.people[row.dataset.i];
+    p[k] = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    if (k === "name" || k === "jobTitle") {
+      // Keep the "Reports to" dropdowns in step with the new name
+      document.querySelectorAll(`#people-rows option[value="${CSS.escape(p.id)}"]`).forEach((o) => (o.textContent = personLabel(p)));
+    }
+    renderOrgPreview();
+  }
+  $("#departments").addEventListener("change", () => draft && renderPeople());
+  $("#people-rows").addEventListener("input", onPersonEdit);
+  $("#people-rows").addEventListener("change", onPersonEdit);
+  $("#people-rows").addEventListener("click", (e) => {
+    const row = e.target.closest("[data-i]");
+    if (!row || !e.target.closest("[data-person-remove]")) return;
+    const removed = draft.people.splice(Number(row.dataset.i), 1)[0];
+    // Anyone who reported to them now reports to their manager
+    draft.people.forEach((p) => { if (p.reportsTo === removed.id) p.reportsTo = removed.reportsTo || ""; });
+    renderPeople();
+  });
+  $("#add-person").addEventListener("click", () => {
+    draft.people.push({ id: tempId(), name: "", jobTitle: "", department: "", responsibilities: "",
+      phone: "", email: "", reportsTo: "", showInContacts: false });
+    renderPeople();
+    const inputs = document.querySelectorAll('#people-rows [data-k="name"]');
     inputs[inputs.length - 1].focus();
   });
 
@@ -356,8 +424,9 @@
       siteName: $("#siteName").value,
       tagline: $("#tagline").value,
       roles: $("#roles").value.split("\n").map((s) => s.trim()).filter(Boolean),
+      departments: currentDepartments(),
       categories: draft.categories,
-      contacts: draft.contacts,
+      people: draft.people,
     };
     btn.disabled = true;
     try {
@@ -372,6 +441,176 @@
       btn.disabled = false;
     }
   }));
+
+  // ----- Logo ------------------------------------------------------------------
+  function renderLogo() {
+    const has = Boolean(content.logo);
+    $("#logo-preview").innerHTML = has
+      ? `<img src="/files/${encodeURIComponent(content.logo)}" alt="Current logo" />`
+      : '<span class="muted small">No logo</span>';
+    $("#logo-remove").hidden = !has;
+    const icon = document.querySelector('link[rel="icon"]');
+    if (has && icon) icon.href = "/files/" + encodeURIComponent(content.logo);
+  }
+
+  $("#logo-file").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append("logo", file);
+    try {
+      const res = await api("POST", "/api/admin/logo", fd);
+      content.logo = res.logo;
+      renderLogo();
+      toast("Logo updated");
+    } catch (err) {
+      toast(err.message, true);
+    } finally {
+      e.target.value = "";
+    }
+  });
+
+  $("#logo-remove").addEventListener("click", async () => {
+    if (!confirm("Remove the logo?")) return;
+    try {
+      await api("DELETE", "/api/admin/logo");
+      delete content.logo;
+      renderLogo();
+      toast("Logo removed");
+    } catch (err) { toast(err.message, true); }
+  });
+
+  // ---------------------------------------------------------------------------
+  // Access checklist (admin only)
+  // ---------------------------------------------------------------------------
+  const KINDS = {
+    system: "💻 System", folder: "📁 Folder", email: "✉️ Email", hardware: "🔑 Hardware",
+    training: "🎓 Training", other: "📌 Other",
+  };
+  const accessDialog = $("#access-dialog");
+  const accessForm = $("#access-form");
+  let editingAccess = null;
+
+  const needs = (a, dept, role) =>
+    (!dept || !a.departments || !a.departments.length || a.departments.includes(dept)) &&
+    (!role || !a.roles || !a.roles.length || a.roles.includes(role));
+
+  function scopeText(a) {
+    const d = a.departments && a.departments.length ? a.departments.join(", ") : "All departments";
+    const r = a.roles && a.roles.length ? a.roles.join(", ") : "all roles";
+    return `${d} · ${r}`;
+  }
+
+  function renderAccess() {
+    fillSelect($("#chk-dept"), content.departments, "Any department");
+    fillSelect($("#chk-role"), content.roles, "Any role");
+    const dept = $("#chk-dept").value;
+    const role = $("#chk-role").value;
+    const who = $("#chk-name").value.trim();
+    const items = content.access.filter((a) => needs(a, dept, role));
+
+    $("#access-checklist").innerHTML = `
+      <div class="print-only print-heading">
+        <h1>${esc(content.siteName || "")} — Access checklist</h1>
+        <p><strong>Employee:</strong> ${esc(who) || "________________________"} &nbsp;
+           <strong>Department:</strong> ${esc(dept) || "________________"} &nbsp;
+           <strong>Role:</strong> ${esc(role) || "________________"} &nbsp;
+           <strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+      </div>` + (items.length ? `
+      <table class="access-table">
+        <thead><tr><th class="tick">✓</th><th>Access needed</th><th>Location</th><th>How to request</th><th>Approver</th><th class="print-only">Date done</th></tr></thead>
+        <tbody>${items.map((a) => `<tr>
+          <td class="tick"><input type="checkbox" aria-label="Done: ${esc(a.name)}" /></td>
+          <td><strong>${esc(a.name)}</strong><br><span class="kind">${KINDS[a.kind] || ""}</span>
+            ${a.notes ? `<div class="muted small">${esc(a.notes)}</div>` : ""}</td>
+          <td class="mono">${esc(a.location || "")}</td>
+          <td>${esc(a.howToRequest || "")}</td>
+          <td>${esc(a.approver || "")}</td>
+          <td class="print-only"></td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <p class="muted small">${items.length} item${items.length === 1 ? "" : "s"}${dept || role ? " for " + esc([dept, role].filter(Boolean).join(" · ")) : " (everything)"}.</p>`
+      : '<p class="empty">No access items match. Add some below.</p>');
+
+    $("#access-list").innerHTML = content.access.length ? `<ul class="res-list">${content.access.map((a) => `
+      <li>
+        <div class="res-main">
+          <div class="res-title"><span class="type">${KINDS[a.kind] || ""}</span> ${esc(a.name)}</div>
+          <div class="res-meta muted small">🏢 ${esc(scopeText(a))}${a.location ? " · " + esc(a.location) : ""}</div>
+        </div>
+        <div class="res-actions">
+          <button type="button" class="btn btn-small" data-access-edit="${esc(a.id)}">Edit</button>
+          <button type="button" class="btn btn-small btn-danger" data-access-delete="${esc(a.id)}">Delete</button>
+        </div>
+      </li>`).join("")}</ul>` : '<p class="empty">No access items yet.</p>';
+  }
+
+  ["#chk-dept", "#chk-role"].forEach((sel) => $(sel).addEventListener("change", renderAccess));
+  $("#chk-name").addEventListener("input", renderAccess);
+  $("#print-access").addEventListener("click", () => {
+    document.body.classList.add("printing-access");
+    window.print();
+    document.body.classList.remove("printing-access");
+  });
+
+  function openAccess(a) {
+    editingAccess = a ? a.id : null;
+    accessForm.reset();
+    $("#access-error").hidden = true;
+    $("#access-title").textContent = a ? "Edit access item" : "Add access item";
+    accessForm.name.value = (a && a.name) || "";
+    accessForm.kind.value = (a && a.kind) || "system";
+    accessForm.location.value = (a && a.location) || "";
+    accessForm.howToRequest.value = (a && a.howToRequest) || "";
+    accessForm.approver.value = (a && a.approver) || "";
+    accessForm.notes.value = (a && a.notes) || "";
+    checkboxes($("#access-dept-checks"), "departments", content.departments, a && a.departments,
+      "No departments set up yet.");
+    checkboxes($("#access-role-checks"), "roles", content.roles, a && a.roles, "No roles set up yet.");
+    accessDialog.showModal();
+    accessForm.name.focus();
+  }
+
+  $("#new-access").addEventListener("click", () => openAccess(null));
+  $("#cancel-access").addEventListener("click", () => accessDialog.close());
+  $("#access-list").addEventListener("click", async (e) => {
+    const edit = e.target.closest("[data-access-edit]");
+    if (edit) return openAccess(content.access.find((a) => a.id === edit.dataset.accessEdit));
+    const del = e.target.closest("[data-access-delete]");
+    if (del) {
+      const a = content.access.find((x) => x.id === del.dataset.accessDelete);
+      if (!a || !confirm(`Delete "${a.name}" from the access list?`)) return;
+      try {
+        await api("DELETE", "/api/admin/access/" + encodeURIComponent(a.id));
+        toast("Deleted");
+        await reload();
+      } catch (err) { toast(err.message, true); }
+    }
+  });
+
+  accessForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const body = {
+      name: accessForm.name.value,
+      kind: accessForm.kind.value,
+      location: accessForm.location.value,
+      howToRequest: accessForm.howToRequest.value,
+      approver: accessForm.approver.value,
+      notes: accessForm.notes.value,
+      departments: checked(accessForm, "departments"),
+      roles: checked(accessForm, "roles"),
+    };
+    try {
+      if (editingAccess) await api("PUT", "/api/admin/access/" + encodeURIComponent(editingAccess), body);
+      else await api("POST", "/api/admin/access", body);
+      accessDialog.close();
+      toast("Saved");
+      await reload();
+    } catch (err) {
+      $("#access-error").textContent = err.message;
+      $("#access-error").hidden = false;
+    }
+  });
 
   reload().catch((err) => toast("Couldn't load content: " + err.message, true));
 })();

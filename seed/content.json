@@ -59,32 +59,6 @@
       "description": "Guides, videos, glossaries and how-tos."
     }
   ],
-  "contacts": [
-    {
-      "name": "Warehouse Manager",
-      "role": "Site lead / escalations",
-      "phone": "ext. 100",
-      "email": "manager@example.com"
-    },
-    {
-      "name": "Office Supervisor",
-      "role": "Day-to-day office questions",
-      "phone": "ext. 101",
-      "email": "office@example.com"
-    },
-    {
-      "name": "IT Helpdesk",
-      "role": "Logins, printers, PC problems",
-      "phone": "ext. 200",
-      "email": "it@example.com"
-    },
-    {
-      "name": "H&S Lead",
-      "role": "Accidents, near misses, PPE",
-      "phone": "ext. 300",
-      "email": "safety@example.com"
-    }
-  ],
   "resources": [
     {
       "id": "ffe56f63c0a0",
@@ -127,7 +101,10 @@
       "updated": "2026-08-15",
       "newStarter": true,
       "pinned": true,
-      "file": "SOP-Goods-In-Receiving.pdf"
+      "file": "SOP-Goods-In-Receiving.pdf",
+      "departments": [
+        "Inbound"
+      ]
     },
     {
       "id": "72ff180ce237",
@@ -168,7 +145,10 @@
       "owner": "Inventory Controller",
       "updated": "2026-09-10",
       "pinned": true,
-      "file": "Stock-Discrepancy-Tracker.xlsx"
+      "file": "Stock-Discrepancy-Tracker.xlsx",
+      "departments": [
+        "Inventory"
+      ]
     },
     {
       "id": "37a1849ac07a",
@@ -233,6 +213,10 @@
         "courier",
         "collection",
         "booking"
+      ],
+      "departments": [
+        "Transport",
+        "Outbound"
       ]
     },
     {
@@ -247,6 +231,217 @@
         "vba",
         "security warning",
         "help"
+      ]
+    }
+  ],
+  "departments": [
+    "Inbound",
+    "Outbound",
+    "Inventory",
+    "Transport",
+    "Office & Admin"
+  ],
+  "people": [
+    {
+      "id": "p-gm",
+      "name": "Alex Morgan",
+      "jobTitle": "Warehouse Manager",
+      "department": "",
+      "responsibilities": "Site lead, escalations, approvals",
+      "phone": "ext. 100",
+      "email": "manager@example.com",
+      "reportsTo": "",
+      "showInContacts": true
+    },
+    {
+      "id": "p-os",
+      "name": "Sam Patel",
+      "jobTitle": "Office Supervisor",
+      "department": "Office & Admin",
+      "responsibilities": "Day-to-day office questions, rotas, holidays",
+      "phone": "ext. 101",
+      "email": "office@example.com",
+      "reportsTo": "p-gm",
+      "showInContacts": true
+    },
+    {
+      "id": "p-ops",
+      "name": "Jordan Lee",
+      "jobTitle": "Operations Supervisor",
+      "department": "",
+      "responsibilities": "Floor operations, shift planning",
+      "phone": "ext. 102",
+      "email": "ops@example.com",
+      "reportsTo": "p-gm",
+      "showInContacts": false
+    },
+    {
+      "id": "p-hs",
+      "name": "Chris Evans",
+      "jobTitle": "H&S Lead",
+      "department": "",
+      "responsibilities": "Accidents, near misses, PPE",
+      "phone": "ext. 300",
+      "email": "safety@example.com",
+      "reportsTo": "p-gm",
+      "showInContacts": true
+    },
+    {
+      "id": "p-wa",
+      "name": "Taylor Brown",
+      "jobTitle": "Warehouse Administrator",
+      "department": "Office & Admin",
+      "responsibilities": "Paperwork, WMS admin",
+      "phone": "ext. 103",
+      "email": "",
+      "reportsTo": "p-os",
+      "showInContacts": false
+    },
+    {
+      "id": "p-tp",
+      "name": "Riley Khan",
+      "jobTitle": "Transport Planner",
+      "department": "Transport",
+      "responsibilities": "Carrier bookings, collections",
+      "phone": "ext. 400",
+      "email": "transport@example.com",
+      "reportsTo": "p-os",
+      "showInContacts": true
+    },
+    {
+      "id": "p-tli",
+      "name": "Morgan Davies",
+      "jobTitle": "Team Leader – Inbound",
+      "department": "Inbound",
+      "responsibilities": "Goods in, putaway",
+      "phone": "ext. 110",
+      "email": "",
+      "reportsTo": "p-ops",
+      "showInContacts": false
+    },
+    {
+      "id": "p-tlo",
+      "name": "Jamie Wilson",
+      "jobTitle": "Team Leader – Outbound",
+      "department": "Outbound",
+      "responsibilities": "Picking, packing, despatch",
+      "phone": "ext. 120",
+      "email": "",
+      "reportsTo": "p-ops",
+      "showInContacts": false
+    },
+    {
+      "id": "p-ic",
+      "name": "Casey Green",
+      "jobTitle": "Inventory Controller",
+      "department": "Inventory",
+      "responsibilities": "Stock counts, discrepancies",
+      "phone": "ext. 130",
+      "email": "stock@example.com",
+      "reportsTo": "p-ops",
+      "showInContacts": false
+    },
+    {
+      "id": "p-it",
+      "name": "IT Helpdesk",
+      "jobTitle": "",
+      "department": "",
+      "responsibilities": "Logins, printers, PC problems",
+      "phone": "ext. 200",
+      "email": "it@example.com",
+      "reportsTo": "",
+      "showInContacts": true
+    }
+  ],
+  "access": [
+    {
+      "id": "a-email",
+      "name": "Company email & Microsoft 365",
+      "kind": "email",
+      "howToRequest": "Raise an IT ticket before start date",
+      "approver": "Office Supervisor"
+    },
+    {
+      "id": "a-wms",
+      "name": "Warehouse Management System (WMS)",
+      "kind": "system",
+      "location": "https://example.com/wms",
+      "howToRequest": "IT ticket — state the user profile needed",
+      "approver": "Operations Supervisor"
+    },
+    {
+      "id": "a-hr",
+      "name": "HR / holiday system",
+      "kind": "system",
+      "howToRequest": "Created automatically by HR",
+      "approver": "HR"
+    },
+    {
+      "id": "a-sop",
+      "name": "SOP shared folder (read only)",
+      "kind": "folder",
+      "location": "\\\\SERVER\\Warehouse\\SOPs",
+      "howToRequest": "IT ticket",
+      "approver": "Office Supervisor"
+    },
+    {
+      "id": "a-stock",
+      "name": "Stock Control shared folder",
+      "kind": "folder",
+      "location": "\\\\SERVER\\Warehouse\\Stock",
+      "howToRequest": "IT ticket",
+      "approver": "Operations Supervisor",
+      "departments": [
+        "Inventory"
+      ]
+    },
+    {
+      "id": "a-carrier",
+      "name": "Carrier booking portal",
+      "kind": "system",
+      "location": "https://example.com/carrier",
+      "howToRequest": "Ask the Transport Planner to add a user",
+      "approver": "Transport Planner",
+      "departments": [
+        "Transport",
+        "Outbound"
+      ]
+    },
+    {
+      "id": "a-transport",
+      "name": "Transport shared mailbox",
+      "kind": "email",
+      "location": "transport@example.com",
+      "howToRequest": "IT ticket",
+      "approver": "Office Supervisor",
+      "departments": [
+        "Transport"
+      ]
+    },
+    {
+      "id": "a-supervisor",
+      "name": "Supervisor reports folder",
+      "kind": "folder",
+      "location": "\\\\SERVER\\Warehouse\\Reports",
+      "howToRequest": "IT ticket",
+      "approver": "Warehouse Manager",
+      "roles": [
+        "Team Leader",
+        "Supervisor"
+      ]
+    },
+    {
+      "id": "a-flt",
+      "name": "MHE / forklift key fob",
+      "kind": "hardware",
+      "howToRequest": "Only after FLT licence is checked",
+      "approver": "H&S Lead",
+      "roles": [
+        "Team Leader"
+      ],
+      "departments": [
+        "Inbound",
+        "Outbound"
       ]
     }
   ]
