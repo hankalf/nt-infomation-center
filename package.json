@@ -6,13 +6,18 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
+    "adm-zip": "^0.6.1",
+    "archiver": "^7.0.1",
     "express": "^5.1.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "unpdf": "^1.8.1",
+    "yauzl": "^3.4.0"
   }
 }

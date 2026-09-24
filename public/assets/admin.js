@@ -18,7 +18,7 @@
   // API
   // ---------------------------------------------------------------------------
   async function api(method, url, body) {
-    const opts = { method, headers: { "X-Requested-With": "ntic-admin" } };
+    const opts = { method, headers: { "X-Requested-With": "ntic" } };
     if (body instanceof FormData) opts.body = body;
     else if (body !== undefined) {
       opts.headers["Content-Type"] = "application/json";
@@ -26,7 +26,7 @@
     }
     const res = await fetch(url, opts);
     if (res.status === 401) {
-      location.href = "/admin";
+      location.href = "/login?next=/admin";
       throw new Error("Signed out");
     }
     const data = await res.json().catch(() => ({}));
@@ -42,6 +42,7 @@
     $("#site-name").textContent = content.siteName || "Information Center";
     renderResources();
     renderAccess();
+    NTA.onReload.forEach((fn) => fn(content));
   }
 
   /** A grid of checkboxes, e.g. for roles or departments. */
@@ -67,6 +68,22 @@
     toast.timer = setTimeout(() => (t.className = ""), isError ? 6000 : 2500);
   }
 
+  const fmtDate = (iso) => (iso ? new Date(iso.length === 10 ? iso + "T00:00:00" : iso)
+    .toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "");
+  const appliesTo = (item, person) =>
+    (!(item.departments || []).length || item.departments.includes(person.department)) &&
+    (!(item.roles || []).length || item.roles.includes(person.role));
+
+  // Shared with admin-employees.js and admin-dashboard.js
+  const NTA = window.NTA = {
+    api, toast, esc, $, checkboxes, checked, fillSelect, fmtDate, appliesTo, reload,
+    get content() { return content; },
+    onReload: [],
+    onTab: {},
+    openTab(name) { const b = document.querySelector(`.tab[data-tab="${name}"]`); if (b) b.click(); },
+    editResource(id) { NTA.openTab("resources"); openDialog(content.resources.find((r) => r.id === id)); },
+  };
+
   // ---------------------------------------------------------------------------
   // Tabs
   // ---------------------------------------------------------------------------
@@ -76,8 +93,10 @@
       b.setAttribute("aria-selected", b === btn);
     });
     document.querySelectorAll(".tab-panel").forEach((p) => (p.hidden = p.id !== "tab-" + btn.dataset.tab));
-    if (btn.dataset.tab === "sections" || btn.dataset.tab === "contacts") renderSettings();
+    if (["sections", "contacts", "site"].includes(btn.dataset.tab)) renderSettings();
     if (btn.dataset.tab === "access") renderAccess();
+    (NTA.onTab[btn.dataset.tab] || []).forEach((fn) => fn());
+    try { sessionStorage.setItem("ntic:tab", btn.dataset.tab); } catch (e) { /* ignore */ }
   }));
 
   // ---------------------------------------------------------------------------
@@ -128,6 +147,8 @@
                 <a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.title)}</a>
                 ${r.pinned ? '<span class="flag" title="In Quick Links">⭐</span>' : ""}
                 ${r.newStarter ? '<span class="flag" title="On New Starter checklist">🚀</span>' : ""}
+                ${r.requiresAck ? '<span class="flag" title="Staff must confirm they have read it">📌</span>' : ""}
+                ${r.versions && r.versions.length ? `<span class="flag muted small" title="Has previous versions">🕘 ${r.versions.length}</span>` : ""}
               </div>
               <div class="res-meta muted small">
                 ${r.file ? `📎 ${esc(r.file)}` : `🔗 ${esc(r.url)}`}
@@ -231,11 +252,19 @@
     form.updated.value = (r && r.updated) || new Date().toISOString().slice(0, 10);
     form.newStarter.checked = Boolean(r && r.newStarter);
     form.pinned.checked = Boolean(r && r.pinned);
+    form.requiresAck.checked = Boolean(r && r.requiresAck);
+    $("#bump-field").hidden = !(r && r.requiresAck);
     const hasFile = Boolean(r && r.file);
     $("#current-file").hidden = !hasFile;
     $("#current-file").innerHTML = hasFile
-      ? `Current file: <a href="${esc(r.url)}" target="_blank" rel="noopener">📎 ${esc(r.file)}</a> — choose a new file below only if you want to replace it.`
+      ? `Current file: <a href="${esc(r.url)}" target="_blank" rel="noopener">📎 ${esc(r.originalName || r.file)}</a> — choose a new file below only if you want to replace it. The current file will be kept as a previous version.`
       : "";
+    const versions = (r && r.versions) || [];
+    $("#versions").hidden = !versions.length;
+    $("#versions").innerHTML = versions.length ? `<h3>🕘 Previous versions</h3><ul>${versions.map((v) => `
+      <li><a href="/files/${encodeURIComponent(v.file)}" target="_blank" rel="noopener">📎 ${esc(v.originalName || v.file)}</a>
+        <span class="muted small">replaced ${esc(fmtDate(v.replacedAt))}${v.replacedBy ? " by " + esc(v.replacedBy) : ""}</span>
+        <button type="button" class="btn btn-small btn-ghost" data-restore-version="${esc(v.file)}">Restore this version</button></li>`).join("")}</ul>` : "";
     $("#file-label").textContent = hasFile ? "Replace file (optional)" : "File *";
     form.url.value = r && !r.file ? r.url : "";
     setSource(r && !r.file ? "link" : "file");
@@ -245,6 +274,82 @@
   }
 
   $("#new-resource").addEventListener("click", () => openDialog(null));
+  form.requiresAck.addEventListener("change", () => {
+    $("#bump-field").hidden = !(editingId && form.requiresAck.checked &&
+      (content.resources.find((r) => r.id === editingId) || {}).requiresAck);
+  });
+  $("#versions").addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-restore-version]");
+    if (!btn || !confirm("Put this older version back? The current file will be kept as a previous version.")) return;
+    try {
+      const r = await api("POST", `/api/admin/resources/${encodeURIComponent(editingId)}/restore`, { file: btn.dataset.restoreVersion });
+      toast("Previous version restored");
+      await reload();
+      openDialog(content.resources.find((x) => x.id === r.id));
+    } catch (err) { toast(err.message, true); }
+  });
+
+  // ----- Bulk upload -----------------------------------------------------------
+  const bulkDialog = $("#bulk-dialog");
+  const bulkForm = $("#bulk-form");
+  function showBulkFiles() {
+    const files = [...bulkForm.files.files];
+    $("#bulk-files").innerHTML = files.map((f) =>
+      `<li>📎 ${esc(f.name)} <span class="muted small">${(f.size / 1048576).toFixed(1)} MB</span></li>`).join("");
+    $("#save-bulk").textContent = files.length ? `Upload ${files.length} file${files.length === 1 ? "" : "s"}` : "Upload";
+  }
+  $("#bulk-upload").addEventListener("click", () => {
+    bulkForm.reset();
+    $("#bulk-error").hidden = true;
+    bulkForm.category.innerHTML = content.categories.map((c) =>
+      `<option value="${esc(c.id)}">${esc(c.icon)} ${esc(c.name)}</option>`).join("");
+    if ($("#admin-section").value) bulkForm.category.value = $("#admin-section").value;
+    checkboxes($("#bulk-dept-checks"), "departments", content.departments, [], "No departments set up yet.");
+    checkboxes($("#bulk-role-checks"), "roles", content.roles, [], "No roles set up yet.");
+    bulkForm.updated.value = new Date().toISOString().slice(0, 10);
+    showBulkFiles();
+    bulkDialog.showModal();
+  });
+  $("#cancel-bulk").addEventListener("click", () => bulkDialog.close());
+  bulkForm.files.addEventListener("change", showBulkFiles);
+  const dz = $("#dropzone");
+  ["dragenter", "dragover"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => dz.addEventListener(ev, () => dz.classList.remove("over")));
+  dz.addEventListener("drop", (e) => {
+    e.preventDefault();
+    bulkForm.files.files = e.dataTransfer.files;
+    showBulkFiles();
+  });
+  bulkForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const files = [...bulkForm.files.files];
+    const err = $("#bulk-error");
+    if (!files.length) { err.textContent = "Choose some files first."; err.hidden = false; return; }
+    if (files.length > 30) { err.textContent = "Please upload 30 files or fewer at a time."; err.hidden = false; return; }
+    const fd = new FormData();
+    files.forEach((f) => fd.append("files", f));
+    fd.append("category", bulkForm.category.value);
+    fd.append("departments", checked(bulkForm, "departments").join(","));
+    fd.append("roles", checked(bulkForm, "roles").join(","));
+    fd.append("owner", bulkForm.owner.value);
+    fd.append("updated", bulkForm.updated.value);
+    fd.append("requiresAck", bulkForm.requiresAck.checked);
+    const btn = $("#save-bulk");
+    btn.disabled = true;
+    btn.textContent = "Uploading…";
+    try {
+      const created = await api("POST", "/api/admin/resources/bulk", fd);
+      bulkDialog.close();
+      toast(`Added ${created.length} resource${created.length === 1 ? "" : "s"}`);
+      await reload();
+    } catch (ex) {
+      err.textContent = ex.message;
+      err.hidden = false;
+    } finally {
+      btn.disabled = false;
+      showBulkFiles();
+    }
+  });
   $("#cancel-resource").addEventListener("click", () => dialog.close());
 
   form.addEventListener("submit", async (e) => {
@@ -271,6 +376,8 @@
     fd.append("departments", checked(form, "departments").join(","));
     fd.append("newStarter", form.newStarter.checked);
     fd.append("pinned", form.pinned.checked);
+    fd.append("requiresAck", form.requiresAck.checked);
+    fd.append("bumpRev", form.bumpRev.checked);
     if (source === "link") fd.append("url", form.url.value.trim());
     if (source === "file") {
       fd.append("keepFile", String(!file));
@@ -310,13 +417,17 @@
       draft = {
         categories: content.categories.map((c) => ({ ...c })),
         people: content.people.map((p) => ({ ...p })),
+        announcements: (content.announcements || []).map((a) => ({ ...a })),
       };
+      $("#requireLogin").checked = content.settings.requireLogin !== false;
+      $("#reviewMonths").value = content.settings.reviewMonths || 12;
       $("#roles").value = content.roles.join("\n");
       $("#departments").value = content.departments.join("\n");
       $("#siteName").value = content.siteName || "";
       $("#tagline").value = content.tagline || "";
     }
     renderLogo();
+    renderAnnouncements();
 
     $("#section-rows").innerHTML = draft.categories.map((c, i) => {
       const used = content.resources.filter((r) => r.category === c.id).length;
@@ -346,6 +457,13 @@
         `<option value="${esc(o.id)}" ${o.id === p.reportsTo ? "selected" : ""}>${esc(personLabel(o))}</option>`).join("");
       const deptOptions = depts.map((d) => `<option ${d === p.department ? "selected" : ""}>${esc(d)}</option>`).join("");
       return `<div class="edit-row person-row" data-i="${i}">
+        <div class="photo-cell">
+          ${p.photo ? `<img class="photo-thumb" src="/files/${encodeURIComponent(p.photo)}" alt="" />`
+                    : `<span class="photo-thumb empty" aria-hidden="true">📷</span>`}
+          <label class="btn btn-small btn-ghost file-btn">${p.photo ? "Change" : "Photo"}
+            <input type="file" data-photo accept=".png,.jpg,.jpeg,.gif,.webp,image/*" /></label>
+          ${p.photo ? '<button type="button" class="linkish small" data-photo-remove>Remove</button>' : ""}
+        </div>
         <label>Name<input data-k="name" value="${esc(p.name)}" maxlength="120" placeholder="e.g. Sam Patel" /></label>
         <label>Job title / role<input data-k="jobTitle" value="${esc(p.jobTitle)}" maxlength="120" placeholder="e.g. Office Supervisor" /></label>
         <label>Department<select data-k="department"><option value="">—</option>${deptOptions}</select></label>
@@ -421,12 +539,15 @@
 
   document.querySelectorAll("[data-save-settings]").forEach((btn) => btn.addEventListener("click", async () => {
     const body = {
+      section: btn.dataset.saveSettings || "",
       siteName: $("#siteName").value,
       tagline: $("#tagline").value,
       roles: $("#roles").value.split("\n").map((s) => s.trim()).filter(Boolean),
       departments: currentDepartments(),
       categories: draft.categories,
       people: draft.people,
+      announcements: draft.announcements,
+      settings: { requireLogin: $("#requireLogin").checked, reviewMonths: $("#reviewMonths").value },
     };
     btn.disabled = true;
     try {
@@ -441,6 +562,75 @@
       btn.disabled = false;
     }
   }));
+
+  // ----- Person photos ---------------------------------------------------------
+  $("#people-rows").addEventListener("change", async (e) => {
+    const input = e.target.closest("[data-photo]");
+    if (!input || !input.files[0]) return;
+    const row = input.closest("[data-i]");
+    const fd = new FormData();
+    fd.append("photo", input.files[0]);
+    try {
+      const res = await api("POST", "/api/admin/photo", fd);
+      draft.people[row.dataset.i].photo = res.photo;
+      renderPeople();
+      toast("Photo added — remember to save");
+    } catch (err) { toast(err.message, true); }
+  });
+  $("#people-rows").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-photo-remove]")) return;
+    draft.people[e.target.closest("[data-i]").dataset.i].photo = "";
+    renderPeople();
+  });
+
+  // ----- Announcements ---------------------------------------------------------
+  function renderAnnouncements() {
+    $("#announcement-rows").innerHTML = draft.announcements.map((a, i) => `
+      <div class="edit-row" data-i="${i}">
+        <label class="grow">Message<input data-k="text" value="${esc(a.text)}" maxlength="500" placeholder="e.g. Stock count this Friday — no putaway after 2pm" /></label>
+        <label>Style<select data-k="level">
+          <option value="info" ${a.level === "info" ? "selected" : ""}>📣 Info</option>
+          <option value="warning" ${a.level === "warning" ? "selected" : ""}>⚠️ Warning</option>
+          <option value="success" ${a.level === "success" ? "selected" : ""}>✅ Good news</option>
+        </select></label>
+        <label>Show until<input type="date" data-k="until" value="${esc(a.until)}" /></label>
+        <button type="button" class="btn btn-small btn-danger" data-ann-remove>Remove</button>
+      </div>`).join("") || '<p class="empty">No announcements.</p>';
+  }
+  const onAnnEdit = (e) => {
+    const row = e.target.closest("[data-i]");
+    if (row && e.target.dataset.k) draft.announcements[row.dataset.i][e.target.dataset.k] = e.target.value;
+  };
+  $("#announcement-rows").addEventListener("input", onAnnEdit);
+  $("#announcement-rows").addEventListener("change", onAnnEdit);
+  $("#announcement-rows").addEventListener("click", (e) => {
+    if (!e.target.closest("[data-ann-remove]")) return;
+    draft.announcements.splice(Number(e.target.closest("[data-i]").dataset.i), 1);
+    renderAnnouncements();
+  });
+  $("#add-announcement").addEventListener("click", () => {
+    draft.announcements.push({ id: "", text: "", level: "info", until: "" });
+    renderAnnouncements();
+    const inputs = document.querySelectorAll('#announcement-rows [data-k="text"]');
+    inputs[inputs.length - 1].focus();
+  });
+
+  // ----- Restore from backup -----------------------------------------------------
+  $("#restore-file").addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!confirm(`Restore from "${file.name}"?\n\nThis REPLACES all current content, documents and logins with the backup.`)) return;
+    const fd = new FormData();
+    fd.append("backup", file);
+    toast("Restoring… please wait");
+    try {
+      const res = await api("POST", "/api/admin/restore", fd);
+      alert(`Restore complete: ${res.files} file(s)${res.users ? " and staff logins" : ""} restored.` +
+        (res.users ? "\n\nLogins were restored too, so you may need to sign in again." : ""));
+      location.reload();
+    } catch (err) { toast(err.message, true); }
+  });
 
   // ----- Logo ------------------------------------------------------------------
   function renderLogo() {
@@ -612,5 +802,11 @@
     }
   });
 
-  reload().catch((err) => toast("Couldn't load content: " + err.message, true));
+  document.addEventListener("DOMContentLoaded", () => {
+    reload().then(() => {
+      let tab = "dashboard";
+      try { tab = sessionStorage.getItem("ntic:tab") || tab; } catch (e) { /* ignore */ }
+      NTA.openTab(tab);
+    }).catch((err) => toast("Couldn't load content: " + err.message, true));
+  });
 })();

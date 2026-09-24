@@ -17,7 +17,7 @@
           <p id="site-tagline" class="tagline"></p>
         </div>
       </div>
-      <a class="btn btn-ghost" href="/admin">Admin</a>
+      <div class="header-actions" id="user-menu"></div>
     </div>
 
     <div class="wrap search-bar">
@@ -40,12 +40,20 @@
     </div>
   </header>
 
+  <div id="announcements" class="wrap announcements"></div>
+
   <main class="wrap layout">
     <nav class="sidebar" aria-label="Sections">
       <ul id="category-nav"></ul>
     </nav>
 
     <div class="content">
+      <section id="reading" class="panel reading" hidden>
+        <h2>📌 Required reading</h2>
+        <p class="muted">Please read these and confirm. Your supervisor can see who has read what.</p>
+        <ul id="reading-list" class="reading-list"></ul>
+      </section>
+
       <section id="starter" class="panel starter" hidden>
         <div class="panel-head">
           <div>

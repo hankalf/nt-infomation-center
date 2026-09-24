@@ -269,6 +269,35 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
   .org-more { left: 0; transform: none; }
 }
 
+/* Announcements, required reading, read confirmations ------------------- */
+.announcements { display: flex; flex-direction: column; gap: 8px; }
+.announcements:not(:empty) { padding-top: 16px; }
+.announcement {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.announcement.warning { background: color-mix(in srgb, var(--t-macro) 14%, var(--surface)); border-color: color-mix(in srgb, var(--t-macro) 45%, transparent); }
+.announcement.success { background: color-mix(in srgb, var(--t-excel) 14%, var(--surface)); border-color: color-mix(in srgb, var(--t-excel) 45%, transparent); }
+.announcement p { margin: 0; flex: 1; font-weight: 500; }
+.announcement .dismiss { background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 1rem; padding: 0 4px; }
+
+.reading { border-left: 4px solid var(--t-macro); }
+.reading-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.reading-list li { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 4px; }
+.reading-list a { font-weight: 600; flex: 1; }
+
+.card-actions { margin-top: auto; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.card-actions .open { margin-top: 0; }
+.ack-btn { font-size: .8rem; padding: 5px 10px; }
+.ack-note { margin: 0; font-size: .8rem; color: var(--t-macro); font-weight: 600; }
+.ack-note.done { color: var(--t-excel); }
+.snippet { margin: 0; font-size: .8rem; color: var(--muted); background: var(--surface-2); padding: 6px 8px; border-radius: 6px; }
+.header-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.header-actions form { margin: 0; }
+.btn-small { padding: 5px 12px; font-size: .85rem; border-radius: 8px; }
+.contact-photo { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-bottom: 4px; }
+img.org-avatar { object-fit: cover; padding: 0; }
+
 /* Contacts ---------------------------------------------------------------- */
 .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .contact { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; font-size: .92rem; }

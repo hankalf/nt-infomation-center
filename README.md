@@ -1,53 +1,86 @@
 # NT Information Center
 
-A one-stop website for the warehouse office. It collects SOPs, PDFs, Word documents, Excel trackers, macros, websites and contacts in one place, so a new starter can find everything about their role and the processes they follow.
+A one-stop website for the warehouse office. It collects SOPs, PDFs, Word documents, Excel trackers, macros, websites, contacts and an org chart in one place, so a new starter can find everything about their role and processes. Each member of staff has their own login.
 
-- **Public site** (`/`): open to everyone. It has search, plus **Department**, **Role** and type filters, a New Starter checklist, Quick Links, favourites, a "Who to Ask" contacts panel and an **Org Chart**.
-- **Admin** (`/admin`): password protected. Admins can upload documents, add website links, edit or delete resources and change their order. They also manage sections, roles, departments, people, the org chart, the logo, and a private **Access Checklist** of the systems and folders each role needs. Changes go live straight away.
+- **Home page** (`/`): for signed-in staff. It has search (including the text *inside* PDFs and Office documents), Department, Role and type filters, announcements, required reading, a New Starter checklist, Quick Links, favourites, "Who to Ask" and an org chart.
+- **My account** (`/account`): change password, see your details, required reading status and which systems and folders have been set up for you.
+- **Admin** (`/admin`): for admins only. See [Using the admin area](#using-the-admin-area).
 
-Built with Node.js and Express. Content is kept in a JSON file and uploads are stored on disk, so no database is needed.
+Built with Node.js and Express. Everything is stored in JSON files plus an uploads folder, so no database is needed.
 
 ---
 
 ## Deploying on Railway
 
 1. **Create the service.** In Railway, go to *New Project → Deploy from GitHub repo* and pick this repository. Railway detects Node and runs `npm start`.
-2. **Add a Volume.** This step matters: without a Volume, uploads and edits are wiped on every redeploy.
-   Right-click the service → *Attach Volume* → mount path **`/data`**.
-   The app finds the volume automatically through `RAILWAY_VOLUME_MOUNT_PATH`.
+2. **Add a Volume.** This step matters: without a Volume, uploads, edits and logins are wiped on every redeploy.
+   Right-click the service → *Attach Volume* → mount path **`/data`**. The app finds it automatically.
 3. **Set variables.** Go to the service → *Variables*:
+
    | Variable | Required | What it does |
    |---|---|---|
-   | `ADMIN_PASSWORD` | ✅ | Password for `/admin`. Use something long. Changing it signs everyone out. |
-   | `SESSION_SECRET` | optional | An extra random string used to sign the login cookie. |
-   | `MAX_UPLOAD_MB` | optional | Maximum upload size in MB (default 50). |
-4. **Get a web address.** Go to the service → *Settings → Networking → Generate Domain*, or add your own domain.
-5. Open `https://<your-domain>/admin`, sign in, and start adding material.
+   | `ADMIN_PASSWORD` | ✅ first time | Password for the built-in **`admin`** account, which is created on first start. After that you can change it from *My account*. |
+   | `RESET_ADMIN_PASSWORD` | emergency only | Set to `true` and redeploy to reset the `admin` account's password back to `ADMIN_PASSWORD` if you're locked out. **Remove it again afterwards.** |
+   | `SESSION_SECRET` | optional | A random string used to sign login cookies. If it isn't set, one is generated and kept on the Volume. |
+   | `MAX_UPLOAD_MB` | optional | Maximum size per uploaded document (default 50). |
+   | `MAX_RESTORE_MB` | optional | Maximum size of a backup zip you can restore (default 2048). |
 
-On the first start, the app loads some example content (a welcome guide, an SOP, a handover template, a tracker and a few links). Edit or delete these from the admin page.
+4. **Get a web address.** Go to the service → *Settings → Networking → Generate Domain*, or add your own domain.
+5. Go to `https://<your-domain>/login`, sign in as **`admin`**, then open **Admin → Employees** and add everyone's logins.
+
+On the first start the app loads some example content: documents, people, departments and access items. Edit or delete it from the admin area.
+
+> **Upgrading from the previous version?** Your content, uploads and people are kept. The first time the new version starts, it creates the `admin` login from `ADMIN_PASSWORD`, and your existing contacts are converted to People automatically.
 
 ---
 
-## Using the admin page
+## Using the admin area
 
-- **Resources tab**
-  - **+ Add resource** → choose **Upload a file** (PDF, Word, Excel, `.xlsm` macro, PowerPoint, images, video…) or **Link to a website**.
-  - Pick the section and tick which **departments** and **roles** it's for. Leave them unticked if it's for everyone. You can also add it to the **New Starter checklist** or **Quick Links**.
-  - **Edit** changes any details or replaces the file. The old file is deleted automatically.
-  - **▲ ▼** changes the order within a section. The New Starter checklist follows this order too.
-- **Sections, Roles & Departments**: add, rename, reorder or remove sections, and edit the lists of roles and departments. A section can't be removed while it still contains resources. When you remove a role or department, it is also cleared from everything that used it.
-- **People & Site**
-  - **Logo**: upload a PNG, JPG, SVG or WebP (up to 5 MB). It appears in the site header and as the browser tab icon.
-  - **Site name** and **tagline**.
-  - **People**: name, job title / role, department, what to ask them about, phone, email and **Reports to**. The org chart is built from "Reports to". Tick **Who to Ask** to also list someone as a key contact. A live preview of the chart is shown below the list. If a "Reports to" setting would create a loop, you'll get an error when you save.
-- **Access Checklist** (admins only, never shown on the public site)
-  - **Access items**: each system, shared folder, mailbox, key fob or licence, with its location, how to request it and who approves it. Tag each one with the departments and roles that need it, or leave both empty if everyone needs it.
-  - **New starter access checklist**: pick a department and role (and type the employee's name) to get the full list for that person. Tick items off as access is granted, or click **🖨️ Print** for a sign-off sheet with a "Date done" column.
+| Tab | What it's for |
+|---|---|
+| 📊 **Dashboard** | What needs attention: documents **overdue for review**, **required reading** that hasn't been confirmed (and by whom), **onboarding** still in progress, staff who haven't set their password yet, the **most and least opened** resources, a **broken link check**, and recent activity. |
+| 📄 **Resources** | Add, edit, reorder or delete documents and links. **⇪ Bulk upload** adds up to 30 files at once. Replacing a file keeps the old one under **Previous versions**, and you can restore it. Tick **"Staff must confirm they've read it"** to make a document required reading. |
+| 🪪 **Employees** | Staff logins. **Add employee** gives you a temporary password to hand over (with a printable welcome slip). The person must choose their own password when they first sign in. **Onboarding** is a saved checklist of that person's system and folder access. Tick items as IT sets them up, and it records who ticked each one and when. **New password** issues a new temporary password. Untick *Account active* to block someone without losing their history. |
+| 🔑 **Access** | The master list of systems, shared folders, mailboxes, key fobs and licences, tagged by department and role. It also has a quick printable checklist for any department and role. Only admins can see it. |
+| 🏢 **Org Chart** | People, photos, job titles, departments and "Reports to", with a live preview. Tick *Who to Ask* to list someone as a key contact. |
+| 🗂️ **Sections & Roles** | Sections, departments and roles. |
+| ⚙️ **Site & Backup** | Logo, site name, tagline, **announcements** (banners with an optional end date), whether staff must sign in, how often documents should be reviewed, and **backup and restore**. |
+| 🕘 **Activity** | Every sign-in, failed sign-in and admin change: who did what, and when. You can filter it and download it as CSV. |
 
-On the public site, choosing a **Department** filters resources and "Who to Ask" and highlights that department in the org chart.
+### Logins and passwords
+- **Two account types:** *Staff* can use the site. *Admin* can also use the admin area. There's always at least one active admin, and you can't remove your own admin access.
+- **Forgotten passwords:** an admin clicks **New password** on the Employees tab. The old password stops working straight away.
+- **Sessions:** people are signed out after 12 hours. Changing or resetting a password signs out that person's other sessions.
+- **Brute-force protection:** after 10 wrong passwords, that username is locked for 15 minutes.
 
-Allowed upload types: pdf, doc/docx/dotx/rtf/odt/txt, xls/xlsx/xlsm/xlsb/xltm/xltx/xlam/csv/ods, ppt/pptx/ppsx/odp, png/jpg/gif/webp, mp4/mov/webm, zip, msg/eml, vsdx, bas.
-PDFs, images and videos open in the browser. Office files and macros download.
+### Signing in with Microsoft 365 (future option)
+Staff could sign in with their work Microsoft accounts instead of site passwords. That needs your IT team to:
+1. Create an **App registration** in the **Microsoft Entra admin center**.
+2. Add the redirect URI `https://<your-domain>/auth/callback`.
+3. Provide the **Tenant ID**, **Client ID** and a **Client secret**, and optionally a staff group to limit access to.
+
+With those, it's a small addition to this app. Until then, admins create logins under **Employees**.
+
+---
+
+## Backups
+
+**Admin → Site & Backup → Download backup** gives you a zip containing everything: documents, content, people, logins, onboarding records, activity and stats. Store it somewhere safe, because it contains staff login data (passwords are stored hashed, never as plain text).
+
+**Restore from backup** replaces everything with the zip's contents. The data from just before the restore is kept on the server in a `before-restore-<date>` folder (the last two are kept).
+
+It's also worth turning on Railway's own Volume backups (service → *Backups*).
+
+What's on the Volume:
+```
+/data/content.json    resources, sections, roles, departments, people, access items, announcements, settings
+/data/users.json      staff logins, onboarding records, read confirmations
+/data/uploads/        uploaded files (including previous versions, logo and photos)
+/data/activity.log    activity log (rotates at 5 MB)
+/data/stats.json      how often each resource is opened
+/data/fulltext.json   text extracted from documents for search (rebuilt automatically)
+/data/session.key     cookie signing key (if SESSION_SECRET isn't set)
+```
 
 ---
 
@@ -55,36 +88,38 @@ PDFs, images and videos open in the browser. Office files and macros download.
 
 ```bash
 npm install
-ADMIN_PASSWORD=secret npm start
-# → http://localhost:3000   and   http://localhost:3000/admin
+ADMIN_PASSWORD=secret123 npm start
+# → http://localhost:3000   (sign in as "admin")
+npm test                    # automated tests
 ```
 
-Local data is stored in `./storage` (git-ignored).
-
-## Backups
-
-All content lives in the Volume:
-```
-/data/content.json   ← every resource, section, role, department, person and access item
-/data/uploads/       ← uploaded files
-```
-Railway supports Volume backups under the service's *Backups* tab. It's worth turning these on.
+Local data is stored in `./storage` (git-ignored). GitHub Actions runs `npm test` on every push.
 
 ## Project layout
 
 ```
-server.js            Express server: public API, file serving, admin API
-lib/store.js         Reads and writes content.json, validation (incl. org-chart loop checks)
-lib/auth.js          Admin password login (signed HttpOnly cookie, rate-limited)
-public/              Public site (index.html) and shared assets (orgchart.js is used by both pages)
-views/               Admin pages (only served by the server; login required for admin.html)
-seed/                Example content copied in on the very first start
-railway.json         Railway deploy settings (start command, health check)
+server.js              Reads config from environment variables and starts the app
+lib/app.js             Express app: sign-in, pages, public API, file serving
+routes/admin.js        Admin API (resources, employees, settings, dashboard, backup…)
+lib/store.js           Site content + validation
+lib/users.js           Staff accounts (scrypt-hashed passwords, temporary passwords)
+lib/auth.js            Signed session cookies, CSRF check, sign-in rate limiting
+lib/audit.js           Activity log
+lib/stats.js           Resource open counts
+lib/fulltext.js        Text extraction from PDF/Word/Excel/PowerPoint for search
+lib/linkcheck.js       Broken link checker
+lib/backup.js          Backup zip / restore
+lib/uploads.js         Upload rules (allowed file types, size limits)
+public/                Home page and shared CSS/JS (admin-*.js power the admin area)
+views/                 Sign-in, account and admin pages
+seed/                  Example content copied in on the very first start
+test/                  Automated tests (node --test)
 ```
 
 ## Security notes
 
-- A single shared admin password. Anyone who has it can edit content. Share it only with admins.
-- Login attempts are limited to 10 per 15 minutes per IP address. Sessions last 12 hours.
-- The access checklist (system names, folder paths) is only served by the admin API. It is never included in the public content.
-- The public site and all uploaded documents can be seen by **anyone with the link**. Don't upload confidential material unless the site is kept private. For example, don't share the Railway domain publicly, or put it behind your company's SSO or VPN.
+- Passwords are hashed with scrypt. Temporary passwords are shown once and must be changed on first sign-in.
+- Login cookies are HttpOnly and signed. Every change made through the API requires a custom header, which blocks cross-site request forgery.
+- The access checklist (system names, folder paths) is admin-only and never sent to regular staff, except each person's own list, which appears on their *My account* page.
+- Uploaded files are served with a sandboxing Content-Security-Policy, and HTML and script files can't be uploaded.
+- If you turn off "Staff must sign in", the site and all documents can be seen by **anyone with the web address**.

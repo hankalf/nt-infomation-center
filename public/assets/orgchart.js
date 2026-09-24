@@ -46,7 +46,9 @@
       ].join("");
       return `<li>
         <div class="org-node${dim ? " dim" : ""}" tabindex="0">
-          <span class="org-avatar" aria-hidden="true">${esc(initials(p))}</span>
+          ${p.photo
+            ? `<img class="org-avatar" src="/files/${encodeURIComponent(p.photo)}" alt="" loading="lazy" />`
+            : `<span class="org-avatar" aria-hidden="true">${esc(initials(p))}</span>`}
           <span class="org-text">
             <strong>${esc(p.name || p.jobTitle)}</strong>
             ${p.name && p.jobTitle ? `<span class="org-title">${esc(p.jobTitle)}</span>` : ""}

@@ -16,27 +16,55 @@
         <span class="brand-mark" aria-hidden="true">🛠️</span>
         <div>
           <h1><span id="site-name">Information Center</span> · Admin</h1>
-          <p class="tagline">Changes go live on the public site straight away.</p>
+          <p class="tagline">Signed in as <span id="admin-who"></span> · changes go live straight away.</p>
         </div>
       </div>
       <div class="header-actions">
         <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">View site ↗</a>
-        <form method="post" action="/admin/logout"><button class="btn btn-ghost" type="submit">Sign out</button></form>
+        <a class="btn btn-ghost" href="/account">My account</a>
+        <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">Sign out</button></form>
       </div>
     </div>
     <nav class="wrap tabs" role="tablist">
-      <button type="button" role="tab" class="tab active" data-tab="resources" aria-selected="true">📄 Resources</button>
-      <button type="button" role="tab" class="tab" data-tab="sections" aria-selected="false">🗂️ Sections, Roles &amp; Departments</button>
-      <button type="button" role="tab" class="tab" data-tab="contacts" aria-selected="false">👥 People &amp; Site</button>
-      <button type="button" role="tab" class="tab" data-tab="access" aria-selected="false">🔑 Access Checklist</button>
+      <button type="button" role="tab" class="tab active" data-tab="dashboard" aria-selected="true">📊 Dashboard</button>
+      <button type="button" role="tab" class="tab" data-tab="resources" aria-selected="false">📄 Resources</button>
+      <button type="button" role="tab" class="tab" data-tab="employees" aria-selected="false">🪪 Employees</button>
+      <button type="button" role="tab" class="tab" data-tab="access" aria-selected="false">🔑 Access</button>
+      <button type="button" role="tab" class="tab" data-tab="contacts" aria-selected="false">🏢 Org Chart</button>
+      <button type="button" role="tab" class="tab" data-tab="sections" aria-selected="false">🗂️ Sections &amp; Roles</button>
+      <button type="button" role="tab" class="tab" data-tab="site" aria-selected="false">⚙️ Site &amp; Backup</button>
+      <button type="button" role="tab" class="tab" data-tab="activity" aria-selected="false">🕘 Activity</button>
     </nav>
   </header>
 
   <main class="wrap admin-main">
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="tab-panel">
+      <div id="dash-counts" class="stat-row"></div>
+      <div class="dash-grid">
+        <div class="panel" id="dash-review"></div>
+        <div class="panel" id="dash-reading"></div>
+        <div class="panel" id="dash-onboarding"></div>
+        <div class="panel" id="dash-links">
+          <div class="panel-head">
+            <div>
+              <h2>🔗 Broken link check</h2>
+              <p class="muted small">Checks every web link and uploaded file. Links behind a company login are shown as OK.</p>
+            </div>
+            <button type="button" class="btn btn-small" id="run-linkcheck">Run check</button>
+          </div>
+          <div id="linkcheck-results"></div>
+        </div>
+        <div class="panel" id="dash-usage"></div>
+        <div class="panel" id="dash-activity"></div>
+      </div>
+    </section>
+
     <!-- RESOURCES -->
-    <section id="tab-resources" class="tab-panel">
+    <section id="tab-resources" class="tab-panel" hidden>
       <div class="toolbar">
         <button type="button" class="btn" id="new-resource">+ Add resource</button>
+        <button type="button" class="btn btn-ghost" id="bulk-upload">⇪ Bulk upload</button>
         <input type="search" id="admin-search" placeholder="Filter resources…" />
         <select id="admin-section"><option value="">All sections</option></select>
         <select id="admin-dept"><option value="">All departments</option></select>
@@ -64,33 +92,14 @@
           <textarea id="roles" rows="8"></textarea>
         </div>
       </div>
-      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save sections, roles &amp; departments</button></div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings="Sections, roles &amp; departments">Save sections, roles &amp; departments</button></div>
     </section>
 
-    <!-- PEOPLE & SITE -->
+    <!-- PEOPLE & ORG CHART -->
     <section id="tab-contacts" class="tab-panel" hidden>
       <div class="panel">
-        <h2>Site details</h2>
-        <div class="site-details">
-          <div class="logo-box">
-            <div id="logo-preview" class="logo-preview"><span class="muted small">No logo</span></div>
-            <div class="logo-actions">
-              <label class="btn btn-small btn-ghost file-btn">Upload logo…
-                <input type="file" id="logo-file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,image/*" />
-              </label>
-              <button type="button" class="btn btn-small btn-danger" id="logo-remove" hidden>Remove</button>
-            </div>
-            <p class="muted small">PNG, JPG, SVG or WebP, up to 5 MB. A wide logo with a transparent background works best.</p>
-          </div>
-          <div class="grow">
-            <label>Site name<input id="siteName" /></label>
-            <label>Tagline<input id="tagline" /></label>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
         <h2>People</h2>
-        <p class="muted">Everyone listed here appears in the org chart. Set <strong>Reports to</strong> to build the chart, and tick <strong>Who to Ask</strong> to also show them as a key contact.</p>
+        <p class="muted">Everyone listed here appears in the org chart. Set <strong>Reports to</strong> to build the chart, and tick <strong>Who to Ask</strong> to also show them as a key contact. Staff <em>logins</em> are managed separately under <strong>Employees</strong>.</p>
         <div id="people-rows" class="edit-rows"></div>
         <button type="button" class="btn btn-ghost" id="add-person">+ Add person</button>
       </div>
@@ -99,7 +108,7 @@
         <p class="muted small">Updates as you type. Remember to save.</p>
         <div id="org-preview"></div>
       </div>
-      <div class="save-bar"><button type="button" class="btn" data-save-settings>Save people &amp; site details</button></div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings="People">Save people</button></div>
     </section>
 
     <!-- ACCESS CHECKLIST -->
@@ -108,7 +117,7 @@
         <div class="panel-head">
           <div>
             <h2>New starter access checklist</h2>
-            <p class="muted">Pick a department and role to see every system, folder and mailbox that person needs. Print it or tick items off as access is set up.</p>
+            <p class="muted">Pick a department and role to see every system, folder and mailbox that person needs, then print it. To keep a <strong>saved record</strong> for a specific person, use <strong>Employees → Onboarding</strong>.</p>
           </div>
           <button type="button" class="btn btn-ghost no-print" id="print-access">🖨️ Print</button>
         </div>
@@ -129,6 +138,81 @@
           <button type="button" class="btn" id="new-access">+ Add access item</button>
         </div>
         <div id="access-list"></div>
+      </div>
+    </section>
+
+    <!-- EMPLOYEES -->
+    <section id="tab-employees" class="tab-panel" hidden>
+      <div class="toolbar">
+        <button type="button" class="btn" id="new-employee">+ Add employee</button>
+        <input type="search" id="emp-search" placeholder="Filter employees…" />
+        <select id="emp-dept"><option value="">All departments</option></select>
+        <label class="inline small"><input type="checkbox" id="emp-show-disabled" /> Show disabled</label>
+      </div>
+      <div class="panel">
+        <p class="muted small">Each employee gets their own login. When you add someone, you'll get a <strong>temporary password</strong> to give them. They must choose their own password the first time they sign in.</p>
+        <div id="employee-list"></div>
+      </div>
+    </section>
+
+    <!-- SITE & BACKUP -->
+    <section id="tab-site" class="tab-panel" hidden>
+      <div class="panel">
+        <h2>Site details &amp; logo</h2>
+        <div class="site-details">
+          <div class="logo-box">
+            <div id="logo-preview" class="logo-preview"><span class="muted small">No logo</span></div>
+            <div class="logo-actions">
+              <label class="btn btn-small btn-ghost file-btn">Upload logo…
+                <input type="file" id="logo-file" accept=".png,.jpg,.jpeg,.gif,.webp,.svg,image/*" />
+              </label>
+              <button type="button" class="btn btn-small btn-danger" id="logo-remove" hidden>Remove</button>
+            </div>
+            <p class="muted small">PNG, JPG, SVG or WebP, up to 5 MB. A wide logo with a transparent background works best.</p>
+          </div>
+          <div class="grow">
+            <label>Site name<input id="siteName" /></label>
+            <label>Tagline<input id="tagline" /></label>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Security &amp; reviews</h2>
+        <label class="inline"><input type="checkbox" id="requireLogin" /> <span><strong>Staff must sign in to view the site</strong><br><span class="muted small">Recommended. When this is off, anyone with the web address can see the site and open documents.</span></span></label>
+        <label class="narrow-field">Review documents every (months)
+          <input type="number" id="reviewMonths" min="1" max="60" />
+        </label>
+        <p class="muted small">Documents whose "Last reviewed" date is older than this show up on the Dashboard as overdue.</p>
+      </div>
+      <div class="panel">
+        <h2>📣 Announcements</h2>
+        <p class="muted">Banners shown at the top of the home page, for example "New fire exit route from Monday". Staff can dismiss them. Leave "Show until" empty to keep one up until you remove it.</p>
+        <div id="announcement-rows" class="edit-rows"></div>
+        <button type="button" class="btn btn-ghost" id="add-announcement">+ Add announcement</button>
+      </div>
+      <div class="save-bar"><button type="button" class="btn" data-save-settings="Site details, security &amp; announcements">Save site settings</button></div>
+
+      <div class="panel">
+        <h2>💾 Backup &amp; restore</h2>
+        <p class="muted">Download a zip with everything: documents, content, people, logins, activity and usage stats. Keep it somewhere safe, such as a shared drive. Store it carefully, because it contains staff login details.</p>
+        <div class="backup-actions">
+          <a class="btn" href="/api/admin/backup" id="download-backup">⬇ Download backup</a>
+          <label class="btn btn-ghost file-btn">⬆ Restore from backup…
+            <input type="file" id="restore-file" accept=".zip,application/zip" />
+          </label>
+        </div>
+        <p class="muted small">Restoring replaces all current content with the backup. The data from just before the restore is kept in a <code>before-restore-…</code> folder on the server in case you need it back.</p>
+      </div>
+    </section>
+
+    <!-- ACTIVITY -->
+    <section id="tab-activity" class="tab-panel" hidden>
+      <div class="toolbar">
+        <input type="search" id="activity-search" placeholder="Filter by person, action or detail…" />
+        <a class="btn btn-ghost" href="/api/admin/activity.csv">⬇ Download CSV</a>
+      </div>
+      <div class="panel">
+        <div id="activity-list"></div>
       </div>
     </section>
   </main>
@@ -181,8 +265,12 @@
         <div class="flag-checks">
           <label class="inline"><input type="checkbox" name="newStarter" /> 🚀 On the New Starter checklist</label>
           <label class="inline"><input type="checkbox" name="pinned" /> ⭐ Show in Quick Links</label>
+          <label class="inline"><input type="checkbox" name="requiresAck" /> 📌 Staff must confirm they've read it</label>
+          <label class="inline" id="bump-field" hidden><input type="checkbox" name="bumpRev" /> 🔁 Ask everyone to confirm again</label>
         </div>
       </div>
+
+      <div id="versions" class="versions" hidden></div>
 
       <div class="dialog-actions">
         <button type="button" class="btn btn-ghost" id="cancel-resource">Cancel</button>
@@ -230,9 +318,92 @@
     </form>
   </dialog>
 
+  <!-- Bulk upload -->
+  <dialog id="bulk-dialog">
+    <form id="bulk-form">
+      <h2>Bulk upload</h2>
+      <p class="muted small">Add up to 30 files at once. Each one becomes a resource named after its file, and you can edit the details afterwards.</p>
+      <p id="bulk-error" class="alert" hidden></p>
+      <label class="dropzone" id="dropzone">
+        <input type="file" name="files" multiple />
+        <span>📂 Drop files here or <u>choose files</u></span>
+      </label>
+      <ul id="bulk-files" class="bulk-files"></ul>
+      <label>Section *<select name="category" required></select></label>
+      <fieldset>
+        <legend>Departments <span class="muted small">(none ticked = all)</span></legend>
+        <div id="bulk-dept-checks" class="checks-grid"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Roles <span class="muted small">(none ticked = everyone)</span></legend>
+        <div id="bulk-role-checks" class="checks-grid"></div>
+      </fieldset>
+      <div class="row">
+        <label>Owner / contact<input name="owner" maxlength="120" /></label>
+        <label>Last reviewed<input type="date" name="updated" /></label>
+      </div>
+      <label class="inline"><input type="checkbox" name="requiresAck" /> 📌 Staff must confirm they've read these</label>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-bulk">Cancel</button>
+        <button type="submit" class="btn" id="save-bulk">Upload</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Add / edit employee -->
+  <dialog id="employee-dialog">
+    <form id="employee-form">
+      <h2 id="employee-title">Add employee</h2>
+      <p id="employee-error" class="alert" hidden></p>
+      <div class="row">
+        <label>Full name *<input name="name" required maxlength="120" /></label>
+        <label>Username *<input name="username" required maxlength="40" autocapitalize="none" spellcheck="false" placeholder="e.g. sam.patel" /></label>
+      </div>
+      <div class="row">
+        <label>Job title<input name="jobTitle" maxlength="120" /></label>
+        <label>Email<input name="email" type="email" maxlength="200" /></label>
+      </div>
+      <div class="row">
+        <label>Department<select name="department"></select></label>
+        <label>Role<select name="role"></select></label>
+        <label>Start date<input name="startDate" type="date" /></label>
+      </div>
+      <label>Notes <span class="muted small">(only admins see these)</span><textarea name="notes" rows="2" maxlength="1000"></textarea></label>
+      <div class="flag-checks">
+        <label class="inline"><input type="checkbox" name="isAdmin" /> 🛠️ Admin: can use this admin area</label>
+        <label class="inline" id="active-field"><input type="checkbox" name="active" /> ✅ Account active (untick to block sign-in)</label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="cancel-employee">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Temporary password -->
+  <dialog id="password-dialog">
+    <div class="password-slip" id="password-slip"></div>
+    <div class="dialog-actions no-print">
+      <button type="button" class="btn btn-ghost" id="copy-password">Copy</button>
+      <button type="button" class="btn btn-ghost" id="print-password">🖨️ Print welcome slip</button>
+      <button type="button" class="btn" id="close-password">Done</button>
+    </div>
+  </dialog>
+
+  <!-- Employee onboarding record -->
+  <dialog id="onboarding-dialog" class="wide">
+    <div id="onboarding-body"></div>
+    <div class="dialog-actions no-print">
+      <button type="button" class="btn btn-ghost" id="print-onboarding">🖨️ Print</button>
+      <button type="button" class="btn" id="close-onboarding">Done</button>
+    </div>
+  </dialog>
+
   <div id="toast" role="status" aria-live="polite"></div>
 
   <script src="/assets/orgchart.js"></script>
   <script src="/assets/admin.js"></script>
+  <script src="/assets/admin-employees.js"></script>
+  <script src="/assets/admin-dashboard.js"></script>
 </body>
 </html>

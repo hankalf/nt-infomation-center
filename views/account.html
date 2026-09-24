@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>My account</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👤</text></svg>" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">👤</span>
+        <div>
+          <h1>My account</h1>
+          <p class="tagline" id="who"></p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a class="btn btn-ghost" href="/" id="home-link">← Information Center</a>
+        <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">Sign out</button></form>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap account-main">
+    <section id="welcome" class="panel welcome" hidden>
+      <h2>👋 Welcome! Please choose your own password</h2>
+      <p class="muted">You signed in with a temporary password. Choose a new one to carry on. It must be at least 8 characters. Using a short phrase makes it easy to remember.</p>
+    </section>
+
+    <section class="panel">
+      <h2>🔒 Change password</h2>
+      <p id="pw-error" class="alert" hidden></p>
+      <form id="pw-form" class="pw-form">
+        <label>Current password<input type="password" name="current" autocomplete="current-password" required /></label>
+        <label>New password<input type="password" name="next" autocomplete="new-password" minlength="8" required /></label>
+        <label>Confirm new password<input type="password" name="confirm" autocomplete="new-password" minlength="8" required /></label>
+        <button class="btn" type="submit">Save new password</button>
+      </form>
+    </section>
+
+    <div id="after-pw">
+      <section class="panel">
+        <h2>🪪 My details</h2>
+        <dl id="details" class="details"></dl>
+        <p class="muted small">Something wrong here? Ask an admin to update it.</p>
+      </section>
+
+      <section class="panel" id="reading-panel" hidden>
+        <h2>📌 Required reading</h2>
+        <p class="muted small">Documents you need to read and confirm. Open each one, then click “I've read this” on the home page.</p>
+        <ul id="reading" class="status-list"></ul>
+      </section>
+
+      <section class="panel" id="access-panel" hidden>
+        <h2>🔑 My system &amp; folder access</h2>
+        <p class="muted small">What's been set up for you so far. If something is missing after your first week, ask your supervisor.</p>
+        <ul id="access" class="status-list"></ul>
+      </section>
+    </div>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/account.js"></script>
+</body>
+</html>

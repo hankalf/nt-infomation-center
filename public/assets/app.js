@@ -2,10 +2,14 @@
   "use strict";
 
   let content;
+  let me = null;
   try {
-    const res = await fetch("/api/content", { cache: "no-cache" });
+    const [res, meRes] = await Promise.all([fetch("/api/content", { cache: "no-cache" }), fetch("/api/me", { cache: "no-store" })]);
+    if (res.status === 401) return (location.href = "/login?next=/");
+    if (res.status === 403) return (location.href = "/account?welcome=1");
     if (!res.ok) throw new Error(res.status);
     content = await res.json();
+    me = (await meRes.json()).user;
   } catch (e) {
     document.getElementById("sections").innerHTML =
       '<div class="panel error"><h2>Couldn\'t load content</h2><p>The server didn\'t respond. Refresh the page, or try again in a minute.</p></div>';
@@ -84,8 +88,10 @@
   const state = {
     query: "",
     type: "",
-    role: store.get("role", ""),
-    dept: store.get("dept", ""),
+    // Default the filters to the signed-in person's own role and department
+    role: store.get("role", me && me.role ? me.role : ""),
+    dept: store.get("dept", me && me.department ? me.department : ""),
+    serverHits: new Map(), // resource id -> snippet, from searching inside documents
     favs: new Set(store.get("favs", [])),
     done: new Set(store.get("done", [])),
   };
@@ -112,14 +118,31 @@
     if (!matchesRole(r)) return false;
     if (state.type && r._type !== state.type) return false;
     if (state.query) {
-      return state.query.split(/\s+/).every((w) => r._search.includes(w));
+      return state.query.split(/\s+/).every((w) => r._search.includes(w)) || state.serverHits.has(r._id);
     }
     return true;
   }
 
+  // Links go through /go/:id so the site can count which resources get used.
   function linkAttrs(r) {
+    const href = r.id ? "/go/" + encodeURIComponent(r.id) : r.url;
     const external = isExternal(r.url) || !isDownload(r._type);
-    return `href="${esc(r.url)}"` + (external ? ' target="_blank" rel="noopener"' : " download");
+    return `href="${esc(href)}"` + (external ? ' target="_blank" rel="noopener"' : " download");
+  }
+
+  // ----- Required reading ("I've read this") -----
+  function ackState(r) {
+    if (!r.requiresAck || !me) return null;
+    const a = me.acks && me.acks[r._id];
+    if (a && a.rev === (r.rev || 1)) return { read: true, at: a.at };
+    return { read: false, changed: Boolean(a) };
+  }
+  function ackHtml(r) {
+    const st = ackState(r);
+    if (!st) return r.requiresAck ? '<p class="ack-note">📌 Required reading</p>' : "";
+    if (st.read) return `<p class="ack-note done">✅ You confirmed you read this on ${formatDate(st.at.slice(0, 10))}</p>`;
+    return `<button type="button" class="btn btn-small ack-btn" data-ack="${esc(r._id)}">
+      ${st.changed ? "Updated — confirm you've read the new version" : "✔ I've read this"}</button>`;
   }
 
   function formatDate(d) {
@@ -154,10 +177,14 @@
         </div>
         <h3><a ${linkAttrs(r)}>${esc(r.title)}</a></h3>
         ${r.description ? `<p class="desc">${esc(r.description)}</p>` : ""}
+        ${state.query && state.serverHits.has(r._id) ? `<p class="snippet">🔎 ${esc(state.serverHits.get(r._id))}</p>` : ""}
         ${hint}
         ${roles}
         ${meta ? `<div class="meta">${meta}</div>` : ""}
-        <a class="open" ${linkAttrs(r)}>${isDownload(r._type) && !isExternal(r.url) ? "Download ↓" : "Open ↗"}</a>
+        <div class="card-actions">
+          <a class="open" ${linkAttrs(r)}>${isDownload(r._type) && !isExternal(r.url) ? "Download ↓" : "Open ↗"}</a>
+          ${ackHtml(r)}
+        </div>
       </article>`;
   }
 
@@ -207,6 +234,43 @@
       $(s).classList.toggle("collapsed", Boolean(filtering)));
   }
 
+  function renderReading() {
+    const items = me ? resources.filter((r) => {
+      const st = ackState(r);
+      return st && !st.read && (!r.roles || !r.roles.length || r.roles.includes(me.role)) &&
+        (!r.departments || !r.departments.length || r.departments.includes(me.department));
+    }) : [];
+    $("#reading").hidden = !items.length;
+    $("#reading-list").innerHTML = items.map((r) => `<li>
+      <span aria-hidden="true">${TYPES[r._type].icon}</span>
+      <a ${linkAttrs(r)}>${esc(r.title)}</a>
+      <button type="button" class="btn btn-small ack-btn" data-ack="${esc(r._id)}">✔ I've read this</button>
+    </li>`).join("");
+  }
+
+  function renderAnnouncements() {
+    let dismissed = store.get("dismissed", []);
+    const list = (content.announcements || []).filter((a) => !dismissed.includes(a.id + a.text.length));
+    $("#announcements").innerHTML = list.map((a) => `
+      <div class="announcement ${esc(a.level)}" role="status">
+        <span aria-hidden="true">${a.level === "warning" ? "⚠️" : a.level === "success" ? "✅" : "📣"}</span>
+        <p>${esc(a.text)}</p>
+        <button type="button" class="dismiss" data-dismiss="${esc(a.id + a.text.length)}" aria-label="Dismiss">✕</button>
+      </div>`).join("");
+  }
+
+  function renderUserMenu() {
+    const box = $("#user-menu");
+    if (!me) {
+      box.innerHTML = `<a class="btn btn-ghost" href="/login">Sign in</a>`;
+      return;
+    }
+    box.innerHTML = `
+      <a class="btn btn-ghost user-btn" href="/account" title="My account">👤 ${esc(me.name.split(" ")[0])}</a>
+      ${me.isAdmin ? '<a class="btn btn-ghost" href="/admin">Admin</a>' : ""}
+      <form method="post" action="/logout"><button class="btn btn-ghost" type="submit">Sign out</button></form>`;
+  }
+
   function renderStarter() {
     const items = resources.filter((r) => r.newStarter && matchesRole(r));
     $("#starter").hidden = !items.length;
@@ -249,6 +313,7 @@
     $("#contacts").hidden = !list.length;
     $("#contact-list").innerHTML = list.map((c) => `
       <div class="contact">
+        ${c.photo ? `<img class="contact-photo" src="/files/${encodeURIComponent(c.photo)}" alt="" loading="lazy" />` : ""}
         <strong>${esc(c.name || c.jobTitle)}</strong>
         ${c.name && c.jobTitle ? `<span class="job">${esc(c.jobTitle)}${c.department ? " · " + esc(c.department) : ""}</span>` : ""}
         ${c.responsibilities ? `<span class="muted small">${esc(c.responsibilities)}</span>` : ""}
@@ -276,6 +341,7 @@
   }
 
   function renderAll() {
+    renderReading();
     renderTypeFilters();
     renderStarter();
     renderQuick();
@@ -322,10 +388,18 @@
   let searchTimer;
   $("#search").addEventListener("input", (e) => {
     clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
+    searchTimer = setTimeout(async () => {
       state.query = e.target.value.trim().toLowerCase();
       renderSections();
-    }, 120);
+      if (state.query.length < 3) { state.serverHits = new Map(); return; }
+      const q = state.query;
+      try {
+        const hits = await (await fetch("/api/search?q=" + encodeURIComponent(q))).json();
+        if (q !== state.query) return; // a newer search has started
+        state.serverHits = new Map(hits.map((h) => [h.id, h.snippet]));
+        renderSections();
+      } catch (err) { /* title search still works */ }
+    }, 200);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -336,7 +410,33 @@
     }
   });
 
-  document.addEventListener("click", (e) => {
+  document.addEventListener("click", async (e) => {
+    const ackBtn = e.target.closest("[data-ack]");
+    if (ackBtn) {
+      ackBtn.disabled = true;
+      try {
+        const res = await fetch("/api/me/ack/" + encodeURIComponent(ackBtn.dataset.ack), {
+          method: "POST", headers: { "X-Requested-With": "ntic" },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        me.acks = me.acks || {};
+        me.acks[ackBtn.dataset.ack] = { at: new Date().toISOString(), rev: data.rev };
+        renderReading();
+        renderSections();
+        renderFavs();
+      } catch (err) {
+        ackBtn.disabled = false;
+        alert(err.message || "Couldn't save — please try again.");
+      }
+      return;
+    }
+    const dismiss = e.target.closest("[data-dismiss]");
+    if (dismiss) {
+      store.set("dismissed", [...store.get("dismissed", []), dismiss.dataset.dismiss].slice(-50));
+      renderAnnouncements();
+      return;
+    }
     const typeBtn = e.target.closest("[data-type]");
     if (typeBtn) {
       state.type = typeBtn.dataset.type;
@@ -369,5 +469,7 @@
     renderStarter();
   });
 
+  renderUserMenu();
+  renderAnnouncements();
   renderAll();
 })();
