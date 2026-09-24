@@ -232,6 +232,7 @@
     // Hide the "home" panels while searching so results are front and centre
     ["#starter", "#quick", "#favourites", "#contacts", "#org"].forEach((s) =>
       $(s).classList.toggle("collapsed", Boolean(filtering)));
+    if (!filtering && window.fitOrgChart) window.fitOrgChart($("#org-chart"));
   }
 
   function renderReading() {
@@ -326,6 +327,7 @@
     const html = window.renderOrgChart ? window.renderOrgChart(content.people, { department: state.dept }) : "";
     $("#org").hidden = !html;
     $("#org-chart").innerHTML = html;
+    if (window.fitOrgChart) window.fitOrgChart($("#org-chart"));
     $("#org-note").textContent = state.dept
       ? `People in ${state.dept} are highlighted. Hover or tap a person for contact details.`
       : "Hover or tap a person for contact details.";

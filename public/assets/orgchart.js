@@ -73,5 +73,39 @@
     return html;
   }
 
+  /**
+   * Make the chart fit its container's width: if it's wider than the space,
+   * scale it down (never below 45%) instead of scrolling sideways.
+   * Small screens use the stacked list layout, so no scaling there.
+   */
+  function fitOrgChart(container) {
+    if (!container) return;
+    container.querySelectorAll(".org-scroll > .org-tree").forEach((tree) => {
+      if (!tree.parentElement.clientWidth) return; // hidden right now; fit again when shown
+      tree.style.zoom = "";
+      tree.style.width = "";
+      if (window.innerWidth <= 700) return;
+      tree.style.width = "max-content";
+      const needed = tree.scrollWidth;
+      const available = tree.parentElement.clientWidth;
+      if (needed > available) {
+        tree.style.zoom = Math.max(0.45, available / needed);
+      } else {
+        tree.style.width = ""; // room to spare: stretch branches across the full width
+      }
+    });
+  }
+
+  let resizeTimer;
+  const watched = new Set();
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => watched.forEach(fitOrgChart), 100);
+  });
+
   window.renderOrgChart = renderOrgChart;
+  window.fitOrgChart = (container) => {
+    watched.add(container);
+    fitOrgChart(container);
+  };
 })();

@@ -481,6 +481,7 @@
   function renderOrgPreview() {
     $("#org-preview").innerHTML = window.renderOrgChart(draft.people) ||
       '<p class="empty">Add people above to build the chart.</p>';
+    window.fitOrgChart($("#org-preview"));
   }
 
   $("#section-rows").addEventListener("input", (e) => {

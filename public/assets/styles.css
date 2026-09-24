@@ -64,7 +64,8 @@ body {
 a { color: var(--accent); }
 code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; font-size: .9em; }
 h1, h2, h3 { line-height: 1.25; margin: 0; }
-.wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+.wrap { margin: 0 auto; padding: 0 24px; }
+@media (max-width: 700px) { .wrap { padding: 0 16px; } }
 .muted { color: var(--muted); margin: 4px 0 0; }
 .small { font-size: .875rem; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -207,9 +208,12 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .org-wrap .panel > h2 { margin-bottom: 4px; }
 
 /* Org chart ---------------------------------------------------------------- */
-.org-scroll { overflow-x: auto; padding-bottom: 8px; }
+.org-scroll { padding-bottom: 8px; overflow: hidden; }
 .org-tree, .org-tree ul { display: flex; justify-content: center; margin: 0; padding: 0; list-style: none; }
-.org-tree { min-width: max-content; margin: 0 auto; }
+.org-tree { width: 100%; margin: 0 auto; }
+/* Spread branches across the full width; bigger branches get more room */
+.org-tree ul { width: 100%; }
+.org-tree li { flex: 1 1 auto; }
 .org-tree ul { padding-top: 20px; position: relative; }
 .org-tree li { position: relative; padding: 20px 4px 0; display: flex; flex-direction: column; align-items: center; }
 .org-tree li::before, .org-tree li::after {
@@ -229,6 +233,7 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 .org-tree > li { padding-top: 0; }
 .org-tree > li::before, .org-tree > li::after { display: none; }
 .org-tree.flat { flex-wrap: wrap; gap: 10px; justify-content: flex-start; min-width: 0; }
+.org-tree.flat li { flex: 0 0 auto; }
 .org-tree.flat li { padding: 0; }
 .org-loose { margin-top: 16px; }
 .org-loose .muted { margin: 0 0 8px; }
@@ -299,7 +304,7 @@ h1, h2, h3 { line-height: 1.25; margin: 0; }
 img.org-avatar { object-fit: cover; padding: 0; }
 
 /* Contacts ---------------------------------------------------------------- */
-.contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .contact { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; background: var(--surface-2); border-radius: 10px; font-size: .92rem; }
 .contact .muted { margin: 0 0 4px; }
 .contact .job { color: var(--muted); font-size: .85rem; margin-top: -2px; }
