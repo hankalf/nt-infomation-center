@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  information-center:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -16,5 +16,23 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+      - run: npm ci
+      - run: npm test
+
+  employee-hub:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: employee-hub
+    strategy:
+      matrix:
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: employee-hub/package-lock.json
       - run: npm ci
       - run: npm test

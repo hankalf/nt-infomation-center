@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <title>Employee Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦺</text></svg>" />
+  <link rel="stylesheet" href="/assets/hub.css" />
+</head>
+<body class="open-page">
+  <header class="openbar">
+    <a class="back" href="/"><span aria-hidden="true">←</span> <span id="back-label">Back to hub</span></a>
+    <div id="title" class="title"></div>
+    <span id="countdown" class="countdown" hidden></span>
+    <a id="newtab" class="newtab" href="#" target="_blank" rel="noopener" hidden></a>
+  </header>
+  <div class="frame-wrap">
+    <div id="frame-msg" class="frame-msg" hidden></div>
+    <iframe id="frame" title="" hidden allow="camera; microphone; clipboard-write" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+  </div>
+  <div id="idle" class="idle-overlay" hidden>
+    <div class="idle-card frost"><strong id="idle-title"></strong><span id="idle-sub"></span></div>
+  </div>
+  <script src="/assets/common.js"></script>
+  <script src="/assets/open.js"></script>
+</body>
+</html>

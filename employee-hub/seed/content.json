@@ -1,0 +1,64 @@
+{
+  "settings": {
+    "hubName": { "en": "Employee Hub", "es": "Portal del Empleado" },
+    "intro": {
+      "en": "Tap a tool to get started. Every submission goes straight to the right people.",
+      "es": "Toque una herramienta para comenzar. Cada envío llega directo a las personas correctas."
+    },
+    "teamWord": { "en": "team", "es": "equipo" },
+    "languages": ["en", "es"],
+    "defaultLang": "en",
+    "idleReturnSeconds": 300,
+    "refreshSeconds": 60,
+    "publicUrl": "",
+    "timeZone": "America/New_York",
+    "showQr": true
+  },
+  "tiles": [
+    {
+      "id": "checklist",
+      "title": { "en": "Daily forklift check", "es": "Revisión diaria del montacargas" },
+      "description": { "en": "Pre-shift inspection before you drive.", "es": "Inspección antes de manejar." },
+      "icon": "📋", "url": "", "open": "embed", "active": true, "code": "01"
+    },
+    {
+      "id": "tagout",
+      "title": { "en": "Tag out a forklift", "es": "Sacar de servicio un montacargas" },
+      "description": { "en": "Report damage and flag it for a tech.", "es": "Reporte daños y avise a un técnico." },
+      "icon": "🔧", "url": "", "open": "embed", "active": true, "code": "02"
+    },
+    {
+      "id": "pto",
+      "title": { "en": "Request time off", "es": "Pedir tiempo libre" },
+      "description": { "en": "PTO, unpaid, or bereavement.", "es": "PTO, sin pago o por duelo." },
+      "icon": "🏖️", "url": "", "open": "embed", "active": true, "code": "03"
+    },
+    {
+      "id": "gear",
+      "title": { "en": "Request new gear", "es": "Pedir equipo nuevo" },
+      "description": { "en": "Jackets, bibs, gloves, and more.", "es": "Chaquetas, overoles, guantes y más." },
+      "icon": "🦺", "url": "", "open": "embed", "active": true, "code": "04"
+    }
+  ],
+  "panels": [],
+  "links": [],
+  "optionLabels": {
+    "es": {
+      "1st Shift": "1er turno", "2nd Shift": "2do turno", "3rd Shift": "3er turno",
+      "1st Shift (6-2)": "1er turno (6-2)", "2nd Shift (2-10)": "2do turno (2-10)", "3rd Shift (10-4)": "3er turno (10-4)", "Mid Shift (8-5)": "Turno intermedio (8-5)",
+      "Freezer (Put Aways & Picking)": "Congelador (acomodo y surtido)", "Floater": "Flotante", "Dock": "Andén", "Production": "Producción",
+      "Drive Wheel": "Rueda motriz", "Battery Issue": "Problema de batería", "Drive Handle": "Manija de manejo", "Lifting Issue": "Problema de elevación",
+      "Rigger Wheel": "Rueda de carga", "Routine Maintenance": "Mantenimiento de rutina", "Other": "Otro",
+      "Low": "Baja", "Medium": "Media", "Critical ⚠️️": "Crítica ⚠️", "Critical": "Crítica",
+      "NEW": "NUEVO", "Working on it": "En proceso", "Pending Repair": "Pendiente de reparación", "Done": "Listo", "Stuck": "Atascado",
+      "PTO - Paid Time Off": "PTO - Tiempo libre pagado", "UPTO - Unpaid Time Off": "UPTO - Tiempo libre sin pago", "Bereavement": "Duelo",
+      "Pending": "Pendiente", "Approved": "Aprobado", "Denied": "Rechazado", "Requested": "Solicitado",
+      "Overhead Guard": "Protector superior", "Mast": "Mástil", "Forks": "Horquillas", "Noise or Fluid": "Ruido o fugas",
+      "Tires & Wheels": "Llantas y ruedas", "Seat & Seat Belts": "Asiento y cinturón", "Warning Decals / Manual": "Calcomanías / Manual",
+      "Data Plate / Load Chart": "Placa de datos / Tabla de carga", "Battery": "Batería", "Gauges / Instruments": "Indicadores / Instrumentos",
+      "Lights": "Luces", "Control Arm": "Brazo de control", "Steering": "Dirección", "Horn": "Claxon",
+      "Directional / Speed Control": "Direccional / Control de velocidad", "Forward & Reverse": "Adelante y reversa", "Backup Alarm": "Alarma de reversa",
+      "PASS": "PASA", "FAIL": "FALLA"
+    }
+  }
+}

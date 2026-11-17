@@ -8,6 +8,8 @@ A one-stop website for the warehouse office. It collects SOPs, PDFs, Word docume
 
 Built with Node.js and Express. Everything is stored in JSON files plus an uploads folder, so no database is needed.
 
+> **Looking for the warehouse-floor kiosk?** The **Employee Hub** (monday.com form tiles, live board panels, QR code, English/Spanish) is a separate app in the [`employee-hub/`](employee-hub/README.md) folder, deployed as its own Railway service.
+
 ---
 
 ## Deploying on Railway

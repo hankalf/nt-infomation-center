@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Admin sign in · Employee Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦺</text></svg>" />
+  <link rel="stylesheet" href="/assets/hub.css" />
+  <link rel="stylesheet" href="/assets/admin.css" />
+</head>
+<body class="login-page">
+  <div class="glow spectrum" aria-hidden="true"></div>
+  <main class="login-card frost">
+    <div class="login-brand"><span class="pill spectrum" aria-hidden="true"></span><div><h1>Employee Hub admin</h1><p class="muted small">Set up tiles, board panels and links for the kiosk.</p></div></div>
+    <p id="notice" class="notice" hidden></p>
+    <p id="error" class="alert-box" hidden></p>
+    <form method="post" action="/admin/login">
+      <label>Admin password
+        <input type="password" name="password" autocomplete="current-password" required autofocus />
+      </label>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+    <p class="muted small">The password is the <code>ADMIN_PASSWORD</code> variable on the Railway service. <a href="/">Back to the hub</a></p>
+  </main>
+  <script src="/assets/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="robots" content="noindex" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Employee Hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦺</text></svg>" />
+  <link rel="stylesheet" href="/assets/hub.css" />
+</head>
+<body>
+  <div class="glow spectrum" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="pill spectrum" aria-hidden="true"></span><span id="brand-name">Employee Hub</span></a>
+      <div class="topbar-right">
+        <div id="lang-toggle" class="lang-toggle" role="group" hidden></div>
+        <a id="mini-qr" class="mini-qr" href="/qr" hidden><img src="/qr.svg" alt="" /><span id="mini-qr-label"></span></a>
+      </div>
+    </div>
+  </header>
+  <main class="home">
+    <div class="home-left">
+      <section class="greeting">
+        <p id="date" class="date">&nbsp;</p>
+        <h1 id="greeting">&nbsp;</h1>
+        <p id="intro" class="intro"></p>
+      </section>
+      <section id="tiles" class="tiles" aria-label="Tools"></section>
+    </div>
+    <div class="home-right">
+      <section id="links-block" hidden>
+        <div class="block-head">
+          <div><h2 id="links-title"></h2><p id="links-sub"></p></div>
+        </div>
+        <ul id="links" class="links-grid"></ul>
+      </section>
+      <div id="panels"></div>
+    </div>
+  </main>
+  <script src="/assets/common.js"></script>
+  <script src="/assets/home.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Scan to open the hub</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦺</text></svg>" />
+  <link rel="stylesheet" href="/assets/hub.css" />
+</head>
+<body>
+  <div class="glow spectrum" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="/"><span class="pill spectrum" aria-hidden="true"></span><span id="brand-name">Employee Hub</span></a>
+      <div class="topbar-right"><div id="lang-toggle" class="lang-toggle" role="group" hidden></div></div>
+    </div>
+  </header>
+  <main>
+    <div class="qr-page">
+      <p id="eyebrow" class="eyebrow"></p>
+      <h1 id="title"></h1>
+      <div class="qr-card-wrap">
+        <div class="glow2 spectrum" aria-hidden="true"></div>
+        <div class="qr-card frost"><img id="qr" src="/qr.svg" alt="" /></div>
+      </div>
+      <p id="url" class="qr-url"></p>
+      <div class="actions">
+        <a class="btn btn--secondary" href="/" id="back"></a>
+        <button class="btn" type="button" id="print"></button>
+      </div>
+    </div>
+  </main>
+  <script src="/assets/common.js"></script>
+  <script src="/assets/qr.js"></script>
+</body>
+</html>
